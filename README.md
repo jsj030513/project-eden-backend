@@ -107,3 +107,50 @@ Authorization: Bearer jwt-token
 ```
 
 > `JWT_SECRET`은 로컬 개발 기본값만 제공됩니다. 운영 환경에서는 반드시 충분히 긴 비밀값을 환경변수로 관리해야 합니다.
+
+## Character API
+
+Character API는 JWT 인증이 필요합니다.
+
+### 캐릭터 생성
+
+```http
+POST /api/characters
+Authorization: Bearer {accessToken}
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "에덴",
+  "gender": "NONE",
+  "hairStyle": "PIXEL_CUT",
+  "hairColor": "brown",
+  "outfit": "ROBE",
+  "job": "WIZARD"
+}
+```
+
+성공 시 `201 Created`와 생성된 캐릭터 정보를 반환합니다.
+
+### 내 캐릭터 조회
+
+```http
+GET /api/characters/me
+Authorization: Bearer {accessToken}
+```
+
+### 직업별 기본 도구 및 무기
+
+| Job | WeaponType | 설명 |
+|---|---|---|
+| BEGINNER | NONE | 초보자 |
+| FARMER | HOE | 농부의 괭이 |
+| EXPLORER | COMPASS | 탐험가의 나침반 |
+| GUARDIAN | SHIELD | 수호자의 방패 |
+| MERCHANT | BAG | 상인의 가방 |
+| BREEDER | FEED_BASKET | 사육사의 먹이 바구니 |
+| WIZARD | STAFF | 마법사의 지팡이 |
+| WARRIOR | SWORD | 전사의 검 |
+| ARCHER | BOW | 궁수의 활 |
+| BUILDER | HAMMER | 건축가의 망치 |
