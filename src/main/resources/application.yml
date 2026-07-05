@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: project-eden-backend
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET:project-eden-local-development-secret-key-2026-access-token}
+  access-token-expiration: 3600000
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/project_eden}
+    username: ${SPRING_DATASOURCE_USERNAME:eden_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:eden_password}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
