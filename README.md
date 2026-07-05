@@ -190,3 +190,35 @@ Authorization: Bearer {accessToken}
 ```
 
 사용자 캐릭터에 연결된 월드 정보를 반환합니다.
+
+## House API
+
+House API는 월드를 생성한 사용자만 이용할 수 있으며 JWT 인증이 필요합니다.
+
+### 첫 집 생성
+
+```http
+POST /api/houses
+Authorization: Bearer {accessToken}
+```
+
+성공 시 `201 Created`를 반환합니다.
+
+```json
+{
+  "id": 1,
+  "houseName": "에덴의 집",
+  "level": 1,
+  "houseType": "CABIN",
+  "maxDecoration": 10
+}
+```
+
+### 내 집 조회
+
+```http
+GET /api/houses/me
+Authorization: Bearer {accessToken}
+```
+
+사용자 월드에 연결된 집 정보를 반환합니다.
