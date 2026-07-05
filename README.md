@@ -154,3 +154,39 @@ Authorization: Bearer {accessToken}
 | WARRIOR | SWORD | 전사의 검 |
 | ARCHER | BOW | 궁수의 활 |
 | BUILDER | HAMMER | 건축가의 망치 |
+
+## World API
+
+World API는 캐릭터를 생성한 사용자만 이용할 수 있으며 JWT 인증이 필요합니다.
+
+### 첫 월드 생성
+
+```http
+POST /api/worlds
+Authorization: Bearer {accessToken}
+```
+
+성공 시 `201 Created`를 반환합니다.
+
+```json
+{
+  "id": 1,
+  "worldName": "에덴의 세계",
+  "season": "SPRING",
+  "weather": "SUNNY",
+  "day": 1,
+  "gold": 100,
+  "wood": 20,
+  "stone": 10,
+  "food": 20
+}
+```
+
+### 내 월드 조회
+
+```http
+GET /api/worlds/me
+Authorization: Bearer {accessToken}
+```
+
+사용자 캐릭터에 연결된 월드 정보를 반환합니다.
