@@ -23,6 +23,7 @@ import com.projecteden.character.domain.CharacterJob;
 import com.projecteden.character.domain.HairStyle;
 import com.projecteden.character.domain.Outfit;
 import com.projecteden.character.repository.CharacterRepository;
+import com.projecteden.region.repository.RegionRepository;
 import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
 import com.projecteden.world.domain.World;
@@ -38,6 +39,9 @@ class WorldIntegrationTests {
 
 	@Autowired
 	private WorldRepository worldRepository;
+
+	@Autowired
+	private RegionRepository regionRepository;
 
 	@Autowired
 	private CharacterRepository characterRepository;
@@ -56,6 +60,7 @@ class WorldIntegrationTests {
 
 	@BeforeEach
 	void setUp() {
+		regionRepository.deleteAll();
 		worldRepository.deleteAll();
 		characterRepository.deleteAll();
 		userRepository.deleteAll();
@@ -77,6 +82,7 @@ class WorldIntegrationTests {
 
 	@AfterEach
 	void cleanUp() {
+		regionRepository.deleteAll();
 		worldRepository.deleteAll();
 		characterRepository.deleteAll();
 		userRepository.deleteAll();

@@ -252,3 +252,33 @@ Authorization: Bearer {accessToken}
 ```
 
 사용자 집에 연결된 인벤토리 정보를 반환합니다.
+
+## Region API
+
+World 생성 시 다음 기본 지역 5개가 자동 생성됩니다.
+
+| RegionType | DisplayName |
+|---|---|
+| VILLAGE | 마을 |
+| FOREST | 숲 |
+| RIVER | 강 |
+| HILL | 언덕 |
+| FLOWER_FIELD | 꽃밭 |
+
+### 내 지역 목록 조회
+
+```http
+GET /api/regions/me
+Authorization: Bearer {accessToken}
+```
+
+```json
+[
+  {
+    "id": 1,
+    "regionType": "VILLAGE",
+    "displayName": "마을",
+    "unlocked": true
+  }
+]
+```
