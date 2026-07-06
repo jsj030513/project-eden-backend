@@ -33,6 +33,7 @@ import com.projecteden.character.domain.CharacterJob;
 import com.projecteden.character.domain.HairStyle;
 import com.projecteden.character.domain.Outfit;
 import com.projecteden.character.repository.CharacterRepository;
+import com.projecteden.daily.repository.DailyMissionRepository;
 import com.projecteden.house.domain.House;
 import com.projecteden.house.repository.HouseRepository;
 import com.projecteden.inventory.repository.InventoryRepository;
@@ -61,6 +62,9 @@ class PlantGrowthIntegrationTests {
 
 	@Autowired
 	private PlantRepository plantRepository;
+
+	@Autowired
+	private DailyMissionRepository dailyMissionRepository;
 
 	@Autowired
 	private SeedRepository seedRepository;
@@ -214,6 +218,7 @@ class PlantGrowthIntegrationTests {
 	}
 
 	private void deleteTestData() {
+		dailyMissionRepository.deleteAll();
 		plantRepository.deleteAll();
 		seedRepository.deleteAll();
 		inventoryRepository.deleteAll();

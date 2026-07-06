@@ -1,11 +1,12 @@
-package com.projecteden.plant;
+package com.projecteden.daily;
 
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,8 @@ import com.projecteden.daily.repository.DailyMissionRepository;
 import com.projecteden.house.domain.House;
 import com.projecteden.house.repository.HouseRepository;
 import com.projecteden.inventory.repository.InventoryRepository;
+import com.projecteden.plant.domain.Plant;
+import com.projecteden.plant.domain.PlantStage;
 import com.projecteden.plant.repository.PlantRepository;
 import com.projecteden.region.repository.RegionRepository;
 import com.projecteden.region.service.RegionService;
@@ -41,16 +44,16 @@ import com.projecteden.world.repository.WorldRepository;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class PlantIntegrationTests {
+class DailyIntegrationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Autowired
-	private PlantRepository plantRepository;
+	private DailyMissionRepository dailyMissionRepository;
 
 	@Autowired
-	private DailyMissionRepository dailyMissionRepository;
+	private PlantRepository plantRepository;
 
 	@Autowired
 	private SeedRepository seedRepository;
@@ -82,6 +85,7 @@ class PlantIntegrationTests {
 	@Autowired
 	private JwtTokenProvider jwtTokenProvider;
 
+	private Character character;
 	private String accessToken;
 
 	@BeforeEach
@@ -89,10 +93,10 @@ class PlantIntegrationTests {
 		deleteTestData();
 
 		User user = userRepository.save(new User(
-				"plant@example.com",
+				"daily@example.com",
 				passwordEncoder.encode("password123"),
 				"eden"));
-		Character character = characterRepository.save(Character.create(
+		character = characterRepository.save(Character.create(
 				user,
 				"에덴",
 				CharacterGender.NONE,
@@ -116,67 +120,60 @@ class PlantIntegrationTests {
 	}
 
 	@Test
-	void plantingSeedCreatesPlant() throws Exception {
-		performPlant().andExpect(status().isOk());
-		assertEquals(1, plantRepository.count());
+	void todayMissionIsCreatedAutomatically() throws Exception {
+		performGetDaily().andExpect(status().isOk());
+
+		assertEquals(1, dailyMissionRepository.count());
+		assertEquals(LocalDate.now(), dailyMissionRepository.findAll().getFirst().getMissionDate());
 	}
 
 	@Test
-	void firstPlantIsResonanceBoosted() throws Exception {
-		performPlant()
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.resonanceBoosted").value(true));
-	}
-
-	@Test
-	void secondPlantIsNotResonanceBoosted() throws Exception {
-		performPlant().andExpect(status().isOk());
-		performPlant()
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.resonanceBoosted").value(false));
-	}
-
-	@Test
-	void plantStageDefaultsToSeed() throws Exception {
-		performPlant()
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.plantStage").value("SEED"));
-	}
-
-	@Test
-	void plantIsCreatedInFlowerField() throws Exception {
+	void plantingSeedCompletesPlantMission() throws Exception {
 		performPlant().andExpect(status().isOk());
 
-		mockMvc.perform(get("/api/plants/me")
+		performGetDaily()
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.plantCompleted").value(true))
+				.andExpect(jsonPath("$.harvestCompleted").value(false));
+	}
+
+	@Test
+	void harvestingCompletesHarvestMission() throws Exception {
+		performPlant().andExpect(status().isOk());
+		Plant plant = plantRepository.findByCharacterId(character.getId()).getFirst();
+		plant.updateStage(PlantStage.BLOOMED);
+		plantRepository.save(plant);
+
+		mockMvc.perform(post("/api/plants/{plantId}/harvest", plant.getId())
 				.header("Authorization", "Bearer " + accessToken))
+				.andExpect(status().isOk());
+
+		performGetDaily()
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].regionType").value("FLOWER_FIELD"));
+				.andExpect(jsonPath("$.plantCompleted").value(true))
+				.andExpect(jsonPath("$.harvestCompleted").value(true));
 	}
 
 	@Test
-	void getMyPlantsSucceeds() throws Exception {
-		performPlant().andExpect(status().isOk());
-
-		mockMvc.perform(get("/api/plants/me")
-				.header("Authorization", "Bearer " + accessToken))
+	void getTodayMissionSucceeds() throws Exception {
+		performGetDaily()
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$", hasSize(1)))
-				.andExpect(jsonPath("$[0].seedType").value("FLOWER"))
-				.andExpect(jsonPath("$[0].plantedAt").isNotEmpty());
+				.andExpect(jsonPath("$.missionDate").value(LocalDate.now().toString()))
+				.andExpect(jsonPath("$.plantCompleted").value(false))
+				.andExpect(jsonPath("$.harvestCompleted").value(false))
+				.andExpect(jsonPath("$.photoCompleted").value(false))
+				.andExpect(jsonPath("$.rewardClaimed").value(false));
 	}
 
 	@Test
-	void getMyPlantsFailsWithoutAuthentication() throws Exception {
-		mockMvc.perform(get("/api/plants/me"))
+	void getTodayMissionFailsWithoutAuthentication() throws Exception {
+		mockMvc.perform(get("/api/daily"))
 				.andExpect(status().isUnauthorized());
 	}
 
-	@Test
-	void plantingStillDecreasesSeedQuantity() throws Exception {
-		performPlant()
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.remaining").value(4));
-		assertEquals(4, seedRepository.findAll().getFirst().getQuantity());
+	private org.springframework.test.web.servlet.ResultActions performGetDaily() throws Exception {
+		return mockMvc.perform(get("/api/daily")
+				.header("Authorization", "Bearer " + accessToken));
 	}
 
 	private org.springframework.test.web.servlet.ResultActions performPlant() throws Exception {
