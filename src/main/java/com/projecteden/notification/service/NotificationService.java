@@ -5,11 +5,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.common.exception.ForbiddenOperationException;
 import com.projecteden.notification.domain.Notification;
 import com.projecteden.notification.domain.NotificationType;
 import com.projecteden.notification.dto.NotificationResponse;
@@ -38,7 +38,6 @@ public class NotificationService {
 		notificationRepository.save(Notification.create(user, type, message));
 	}
 
-	@Scheduled(cron = "0 0 8 * * *", zone = "Asia/Seoul")
 	@Transactional
 	public void createDailyPrompts() {
 		LocalDate today = LocalDate.now(clock);
@@ -64,7 +63,7 @@ public class NotificationService {
 		Notification notification = notificationRepository.findById(notificationId)
 				.orElseThrow(() -> new ResourceNotFoundException("알림을 찾을 수 없습니다."));
 		if (!notification.getUser().getId().equals(userId)) {
-			throw new IllegalArgumentException("다른 사용자의 알림입니다.");
+			throw new ForbiddenOperationException("다른 사용자의 알림입니다.");
 		}
 		notification.markRead();
 		return toResponse(notification);

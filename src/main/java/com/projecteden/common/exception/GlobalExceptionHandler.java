@@ -36,6 +36,13 @@ public class GlobalExceptionHandler {
 				.body(Map.of("message", exception.getMessage()));
 	}
 
+	@ExceptionHandler(ForbiddenOperationException.class)
+	public ResponseEntity<Map<String, String>> handleForbiddenOperationException(
+			ForbiddenOperationException exception) {
+		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+				.body(Map.of("message", exception.getMessage()));
+	}
+
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<Map<String, String>> handleDataIntegrityViolationException(
 			DataIntegrityViolationException exception) {
