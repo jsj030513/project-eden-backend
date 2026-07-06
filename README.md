@@ -522,3 +522,48 @@ Authorization: Bearer {accessToken}
 - 미구현 상태인 Photo Mission은 현재 보상 조건에 포함되지 않습니다.
 - 공명 경험치와 랜덤 보상은 아직 지급하지 않습니다.
 
+## Photo API
+
+사진 파일 자체는 저장하지 않으며, 파일 메타데이터와 UUID 기반 Mock URL만 DB에 기록합니다.
+
+### Plant 사진 업로드
+
+```http
+POST /api/photos
+Authorization: Bearer {accessToken}
+Content-Type: multipart/form-data
+```
+
+Multipart 파라미터:
+
+| 이름 | 타입 | 설명 |
+|---|---|---|
+| `plantId` | Long | 사진을 연결할 Plant ID |
+| `file` | File | 업로드할 사진 |
+
+```bash
+curl -X POST http://localhost:8080/api/photos \
+  -H "Authorization: Bearer {accessToken}" \
+  -F "plantId=1" \
+  -F "file=@flower.jpg"
+```
+
+```json
+{
+  "id": 1,
+  "plantId": 1,
+  "imageUrl": "/uploads/photos/9b8c1b5e-0000-0000-0000-000000000000.jpg",
+  "uploadedAt": "2026-07-06T16:30:00"
+}
+```
+
+본인 소유의 `BLOOMED` Plant에만 사진을 업로드할 수 있습니다.
+
+### 내 사진 조회
+
+```http
+GET /api/photos/me
+Authorization: Bearer {accessToken}
+```
+
+실제 파일 저장소, S3, AI Recognition, 공명 및 보상 연동은 아직 구현하지 않았습니다.
