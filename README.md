@@ -473,3 +473,27 @@ Authorization: Bearer {accessToken}
 | CARROT | 20 | CARROT +1 |
 | POTATO | 20 | POTATO +1 |
 | TOMATO | 25 | TOMATO +1 |
+
+## Daily Mission API
+
+Daily Mission은 플레이를 제한하지 않고 오늘 수행하면 좋은 목표의 완료 상태를 제공합니다.
+
+```http
+GET /api/daily
+Authorization: Bearer {accessToken}
+```
+
+```json
+{
+  "missionDate": "2026-07-06",
+  "plantCompleted": true,
+  "harvestCompleted": false,
+  "photoCompleted": false,
+  "rewardClaimed": false
+}
+```
+
+- 오늘 Mission이 없으면 조회 또는 행동 시 자동 생성됩니다.
+- 씨앗 심기 성공 시 `plantCompleted=true`가 됩니다.
+- 수확 성공 시 `harvestCompleted=true`가 됩니다.
+- Photo Mission과 보상 지급은 아직 구현하지 않았습니다.

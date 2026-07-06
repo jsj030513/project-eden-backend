@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.projecteden.character.domain.Character;
 import com.projecteden.character.repository.CharacterRepository;
+import com.projecteden.daily.service.DailyService;
 import com.projecteden.house.domain.House;
 import com.projecteden.house.repository.HouseRepository;
 import com.projecteden.inventory.domain.Inventory;
@@ -30,6 +31,7 @@ public class SeedService {
 	private final WorldRepository worldRepository;
 	private final CharacterRepository characterRepository;
 	private final PlantService plantService;
+	private final DailyService dailyService;
 
 	public SeedService(
 			SeedRepository seedRepository,
@@ -37,13 +39,15 @@ public class SeedService {
 			HouseRepository houseRepository,
 			WorldRepository worldRepository,
 			CharacterRepository characterRepository,
-			PlantService plantService) {
+			PlantService plantService,
+			DailyService dailyService) {
 		this.seedRepository = seedRepository;
 		this.inventoryRepository = inventoryRepository;
 		this.houseRepository = houseRepository;
 		this.worldRepository = worldRepository;
 		this.characterRepository = characterRepository;
 		this.plantService = plantService;
+		this.dailyService = dailyService;
 	}
 
 	@Transactional
@@ -61,6 +65,7 @@ public class SeedService {
 
 		int remaining = seed.useOne();
 		PlantResponse plant = plantService.createPlantFromSeed(characterId, seedType);
+		dailyService.completePlantMission(characterId);
 		return new PlantSeedResultResponse(
 				seedType,
 				remaining,
