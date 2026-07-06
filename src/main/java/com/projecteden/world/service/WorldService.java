@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.projecteden.character.domain.Character;
 import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.npc.service.NpcService;
 import com.projecteden.region.service.RegionService;
 import com.projecteden.world.domain.World;
 import com.projecteden.world.dto.CreateWorldResponse;
@@ -19,14 +20,17 @@ public class WorldService {
 	private final WorldRepository worldRepository;
 	private final CharacterRepository characterRepository;
 	private final RegionService regionService;
+	private final NpcService npcService;
 
 	public WorldService(
 			WorldRepository worldRepository,
 			CharacterRepository characterRepository,
-			RegionService regionService) {
+			RegionService regionService,
+			NpcService npcService) {
 		this.worldRepository = worldRepository;
 		this.characterRepository = characterRepository;
 		this.regionService = regionService;
+		this.npcService = npcService;
 	}
 
 	@Transactional
@@ -47,6 +51,7 @@ public class WorldService {
 		long seed = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
 		World world = worldRepository.save(World.create(character, seed));
 		regionService.createDefaultRegions(world.getId());
+		npcService.createDefaultNpcs(world.getId());
 
 		// TODO: 향후 House, NPC, Inventory, Seed 시스템 생성 및 초기화와 연결한다.
 		return toResponse(world);

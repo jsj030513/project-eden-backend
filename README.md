@@ -282,3 +282,34 @@ Authorization: Bearer {accessToken}
   }
 ]
 ```
+
+## NPC API
+
+World 생성 시 기본 NPC 5명이 Region에 자동 배치됩니다.
+
+| NPCType | 이름 | Region |
+|---|---|---|
+| VILLAGE_CHIEF | 촌장 에반 | VILLAGE |
+| CARPENTER | 목수 브람 | VILLAGE |
+| MERCHANT | 상인 노아 | VILLAGE |
+| ARCHIVIST | 기록관 루나 | VILLAGE |
+| GARDENER | 정원사 릴리 | FLOWER_FIELD |
+
+### 내 World NPC 조회
+
+```http
+GET /api/npcs/me
+Authorization: Bearer {accessToken}
+```
+
+```json
+[
+  {
+    "id": 1,
+    "npcType": "VILLAGE_CHIEF",
+    "npcName": "촌장 에반",
+    "description": "에덴 마을의 촌장",
+    "regionType": "VILLAGE"
+  }
+]
+```
