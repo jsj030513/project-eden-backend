@@ -11,9 +11,11 @@ import com.projecteden.house.domain.House;
 import com.projecteden.house.repository.HouseRepository;
 import com.projecteden.inventory.domain.Inventory;
 import com.projecteden.inventory.repository.InventoryRepository;
+import com.projecteden.plant.dto.PlantResponse;
+import com.projecteden.plant.dto.PlantSeedResultResponse;
+import com.projecteden.plant.service.PlantService;
 import com.projecteden.seed.domain.Seed;
 import com.projecteden.seed.domain.SeedType;
-import com.projecteden.seed.dto.PlantSeedResponse;
 import com.projecteden.seed.dto.SeedResponse;
 import com.projecteden.seed.repository.SeedRepository;
 import com.projecteden.world.domain.World;
@@ -27,18 +29,21 @@ public class SeedService {
 	private final HouseRepository houseRepository;
 	private final WorldRepository worldRepository;
 	private final CharacterRepository characterRepository;
+	private final PlantService plantService;
 
 	public SeedService(
 			SeedRepository seedRepository,
 			InventoryRepository inventoryRepository,
 			HouseRepository houseRepository,
 			WorldRepository worldRepository,
-			CharacterRepository characterRepository) {
+			CharacterRepository characterRepository,
+			PlantService plantService) {
 		this.seedRepository = seedRepository;
 		this.inventoryRepository = inventoryRepository;
 		this.houseRepository = houseRepository;
 		this.worldRepository = worldRepository;
 		this.characterRepository = characterRepository;
+		this.plantService = plantService;
 	}
 
 	@Transactional
@@ -49,14 +54,19 @@ public class SeedService {
 	}
 
 	@Transactional
-	public PlantSeedResponse plantSeed(Long characterId, SeedType seedType) {
+	public PlantSeedResultResponse plantSeed(Long characterId, SeedType seedType) {
 		Inventory inventory = findInventoryByCharacterId(characterId);
 		Seed seed = seedRepository.findByInventoryIdAndSeedType(inventory.getId(), seedType)
 				.orElseThrow(() -> new IllegalArgumentException("씨앗을 찾을 수 없습니다."));
 
 		int remaining = seed.useOne();
-		// TODO: 다음 Sprint의 Plant System에서 첫 씨앗에 Resonance 효과를 적용한다.
-		return new PlantSeedResponse(seedType, remaining);
+		PlantResponse plant = plantService.createPlantFromSeed(characterId, seedType);
+		return new PlantSeedResultResponse(
+				seedType,
+				remaining,
+				plant.id(),
+				plant.plantStage(),
+				plant.resonanceBoosted());
 	}
 
 	@Transactional(readOnly = true)
@@ -69,7 +79,7 @@ public class SeedService {
 	}
 
 	@Transactional
-	public PlantSeedResponse plantMySeed(Long userId, SeedType seedType) {
+	public PlantSeedResultResponse plantMySeed(Long userId, SeedType seedType) {
 		Character character = findCharacterByUserId(userId);
 		return plantSeed(character.getId(), seedType);
 	}
