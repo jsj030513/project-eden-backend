@@ -222,3 +222,33 @@ Authorization: Bearer {accessToken}
 ```
 
 사용자 월드에 연결된 집 정보를 반환합니다.
+
+## Inventory API
+
+Inventory API는 집을 생성한 사용자만 이용할 수 있으며 JWT 인증이 필요합니다.
+
+### 인벤토리 생성
+
+```http
+POST /api/inventories
+Authorization: Bearer {accessToken}
+```
+
+성공 시 `201 Created`를 반환합니다.
+
+```json
+{
+  "id": 1,
+  "capacity": 30,
+  "usedSlot": 0
+}
+```
+
+### 내 인벤토리 조회
+
+```http
+GET /api/inventories/me
+Authorization: Bearer {accessToken}
+```
+
+사용자 집에 연결된 인벤토리 정보를 반환합니다.
