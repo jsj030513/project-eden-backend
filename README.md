@@ -496,4 +496,29 @@ Authorization: Bearer {accessToken}
 - 오늘 Mission이 없으면 조회 또는 행동 시 자동 생성됩니다.
 - 씨앗 심기 성공 시 `plantCompleted=true`가 됩니다.
 - 수확 성공 시 `harvestCompleted=true`가 됩니다.
-- Photo Mission과 보상 지급은 아직 구현하지 않았습니다.
+- Photo Mission은 아직 구현하지 않았습니다.
+
+### Daily Mission 보상 수령
+
+```http
+POST /api/daily/reward
+Authorization: Bearer {accessToken}
+```
+
+```json
+{
+  "missionDate": "2026-07-06",
+  "earnedGold": 50,
+  "earnedSeedType": "FLOWER",
+  "earnedSeedQuantity": 2,
+  "rewardClaimed": true,
+  "message": "일일 미션 보상을 수령했습니다."
+}
+```
+
+- 씨앗 심기와 수확 미션을 모두 완료해야 수령할 수 있습니다.
+- 하루에 한 번만 수령할 수 있습니다.
+- 완료 보상은 Gold `+50`, FLOWER Seed `+2`입니다.
+- 미구현 상태인 Photo Mission은 현재 보상 조건에 포함되지 않습니다.
+- 공명 경험치와 랜덤 보상은 아직 지급하지 않습니다.
+
