@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.projecteden.auth.jwt.JwtTokenProvider;
 import com.projecteden.character.repository.CharacterRepository;
+import com.projecteden.tutorial.repository.TutorialProgressRepository;
 import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
 
@@ -33,6 +34,9 @@ class CharacterIntegrationTests {
 	private CharacterRepository characterRepository;
 
 	@Autowired
+	private TutorialProgressRepository tutorialProgressRepository;
+
+	@Autowired
 	private UserRepository userRepository;
 
 	@Autowired
@@ -46,6 +50,7 @@ class CharacterIntegrationTests {
 
 	@BeforeEach
 	void setUp() {
+		tutorialProgressRepository.deleteAll();
 		characterRepository.deleteAll();
 		userRepository.deleteAll();
 		user = userRepository.save(new User(
@@ -57,6 +62,7 @@ class CharacterIntegrationTests {
 
 	@AfterEach
 	void cleanUp() {
+		tutorialProgressRepository.deleteAll();
 		characterRepository.deleteAll();
 		userRepository.deleteAll();
 	}
