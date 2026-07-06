@@ -1,7 +1,9 @@
-package com.projecteden.region;
+package com.projecteden.npc;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -25,24 +27,26 @@ import com.projecteden.character.domain.HairStyle;
 import com.projecteden.character.domain.Outfit;
 import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.npc.repository.NpcRepository;
+import com.projecteden.region.domain.RegionType;
 import com.projecteden.region.repository.RegionRepository;
 import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
+import com.projecteden.world.domain.World;
 import com.projecteden.world.repository.WorldRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class RegionIntegrationTests {
+class NpcIntegrationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Autowired
-	private RegionRepository regionRepository;
+	private NpcRepository npcRepository;
 
 	@Autowired
-	private NpcRepository npcRepository;
+	private RegionRepository regionRepository;
 
 	@Autowired
 	private WorldRepository worldRepository;
@@ -60,16 +64,17 @@ class RegionIntegrationTests {
 	private JwtTokenProvider jwtTokenProvider;
 
 	private String accessToken;
+	private World world;
 
 	@BeforeEach
 	void setUp() throws Exception {
 		deleteTestData();
 
 		User user = userRepository.save(new User(
-				"region@example.com",
+				"npc@example.com",
 				passwordEncoder.encode("password123"),
 				"eden"));
-		characterRepository.save(Character.create(
+		Character character = characterRepository.save(Character.create(
 				user,
 				"에덴",
 				CharacterGender.NONE,
@@ -82,6 +87,7 @@ class RegionIntegrationTests {
 		mockMvc.perform(post("/api/worlds")
 				.header("Authorization", "Bearer " + accessToken))
 				.andExpect(status().isCreated());
+		world = worldRepository.findByCharacterId(character.getId()).orElseThrow();
 	}
 
 	@AfterEach
@@ -90,43 +96,56 @@ class RegionIntegrationTests {
 	}
 
 	@Test
-	void worldCreationCreatesFiveRegions() {
-		org.junit.jupiter.api.Assertions.assertEquals(5, regionRepository.count());
+	void worldCreationCreatesDefaultNpcs() {
+		assertEquals(5, npcRepository.findByRegionWorldId(world.getId()).size());
 	}
 
 	@Test
-	void getMyRegionsReturnsFiveRegions() throws Exception {
-		performGetMyRegions()
+	void getMyNpcsReturnsFiveNpcs() throws Exception {
+		performGetMyNpcs()
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", hasSize(5)));
 	}
 
 	@Test
-	void regionTypesAreCreated() throws Exception {
-		performGetMyRegions()
+	void npcsAreConnectedToRegions() throws Exception {
+		performGetMyNpcs()
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[*].regionType", containsInAnyOrder(
-						"VILLAGE", "FOREST", "RIVER", "HILL", "FLOWER_FIELD")));
+						"VILLAGE", "VILLAGE", "VILLAGE", "VILLAGE", "FLOWER_FIELD")));
 	}
 
 	@Test
-	void displayNamesAreCreated() throws Exception {
-		performGetMyRegions()
+	void villageContainsFourDefaultNpcs() throws Exception {
+		Long villageId = regionRepository
+				.findByWorldIdAndRegionType(world.getId(), RegionType.VILLAGE)
+				.orElseThrow()
+				.getId();
+		assertEquals(4, npcRepository.findByRegionId(villageId).size());
+
+		performGetMyNpcs()
+				.andExpect(jsonPath("$[*].npcType", containsInAnyOrder(
+						"VILLAGE_CHIEF", "GARDENER", "CARPENTER", "MERCHANT", "ARCHIVIST")));
+	}
+
+	@Test
+	void flowerFieldContainsGardener() throws Exception {
+		performGetMyNpcs()
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[*].displayName", containsInAnyOrder(
-						"마을", "숲", "강", "언덕", "꽃밭")))
-				.andExpect(jsonPath("$[*].unlocked", containsInAnyOrder(
-						true, true, true, true, true)));
+				.andExpect(jsonPath("$[?(@.npcType == 'GARDENER')].regionType")
+						.value(contains("FLOWER_FIELD")))
+				.andExpect(jsonPath("$[?(@.npcType == 'GARDENER')].npcName")
+						.value(contains("정원사 릴리")));
 	}
 
 	@Test
-	void getMyRegionsFailsWithoutAuthentication() throws Exception {
-		mockMvc.perform(get("/api/regions/me"))
+	void getMyNpcsFailsWithoutAuthentication() throws Exception {
+		mockMvc.perform(get("/api/npcs/me"))
 				.andExpect(status().isUnauthorized());
 	}
 
-	private org.springframework.test.web.servlet.ResultActions performGetMyRegions() throws Exception {
-		return mockMvc.perform(get("/api/regions/me")
+	private org.springframework.test.web.servlet.ResultActions performGetMyNpcs() throws Exception {
+		return mockMvc.perform(get("/api/npcs/me")
 				.header("Authorization", "Bearer " + accessToken));
 	}
 
