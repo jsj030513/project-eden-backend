@@ -37,6 +37,8 @@ public class User {
 	@Column(nullable = false)
 	private String status = "ACTIVE";
 
+	private LocalDateTime lastLoginAt;
+
 	private LocalDateTime createdAt;
 
 	private LocalDateTime updatedAt;
@@ -55,6 +57,9 @@ public class User {
 		LocalDateTime now = LocalDateTime.now();
 		createdAt = now;
 		updatedAt = now;
+		if (lastLoginAt == null) {
+			lastLoginAt = now;
+		}
 	}
 
 	@PreUpdate
@@ -88,6 +93,18 @@ public class User {
 
 	public String getStatus() {
 		return status;
+	}
+
+	public LocalDateTime getLastLoginAt() {
+		return lastLoginAt;
+	}
+
+	public void recordLogin(LocalDateTime loggedInAt) {
+		lastLoginAt = loggedInAt;
+	}
+
+	public void updateNickname(String nickname) {
+		this.nickname = nickname;
 	}
 
 	public LocalDateTime getCreatedAt() {

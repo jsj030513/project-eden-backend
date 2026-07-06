@@ -1,0 +1,1 @@
+package com.projecteden.profile.dto; import java.time.LocalDate; public record ProfileResponseDTO(Long userId,String nickname,String avatarUrl,LocalDate joinDate,int totalPlayDays,String currentSeason,String representativeCreature,String representativeIsland) {}
