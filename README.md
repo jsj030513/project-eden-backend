@@ -283,6 +283,45 @@ Authorization: Bearer {accessToken}
 ]
 ```
 
+## Tutorial API
+
+Character 생성 시 `WELCOME` 단계의 튜토리얼 진행 상태가 자동 생성됩니다.
+
+진행 순서:
+
+```text
+WELCOME → MEET_CHIEF → CHECK_HOME → CHECK_INVENTORY
+→ VISIT_FLOWER_FIELD → FINISHED
+```
+
+### 내 튜토리얼 조회
+
+```http
+GET /api/tutorial/me
+Authorization: Bearer {accessToken}
+```
+
+### 다음 단계 진행
+
+```http
+PATCH /api/tutorial/advance
+Authorization: Bearer {accessToken}
+Content-Type: application/json
+```
+
+```json
+{
+  "nextStep": "MEET_CHIEF"
+}
+```
+
+```json
+{
+  "currentStep": "MEET_CHIEF",
+  "completed": false
+}
+```
+
 ## NPC API
 
 World 생성 시 기본 NPC 5명이 Region에 자동 배치됩니다.

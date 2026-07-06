@@ -8,6 +8,7 @@ import com.projecteden.character.dto.CharacterResponse;
 import com.projecteden.character.dto.CreateCharacterRequest;
 import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.tutorial.service.TutorialService;
 import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
 
@@ -16,10 +17,15 @@ public class CharacterService {
 
 	private final CharacterRepository characterRepository;
 	private final UserRepository userRepository;
+	private final TutorialService tutorialService;
 
-	public CharacterService(CharacterRepository characterRepository, UserRepository userRepository) {
+	public CharacterService(
+			CharacterRepository characterRepository,
+			UserRepository userRepository,
+			TutorialService tutorialService) {
 		this.characterRepository = characterRepository;
 		this.userRepository = userRepository;
+		this.tutorialService = tutorialService;
 	}
 
 	@Transactional
@@ -39,7 +45,9 @@ public class CharacterService {
 				request.outfit(),
 				request.job());
 
-		return toResponse(characterRepository.save(character));
+		Character savedCharacter = characterRepository.save(character);
+		tutorialService.createTutorial(savedCharacter.getId());
+		return toResponse(savedCharacter);
 	}
 
 	@Transactional(readOnly = true)
