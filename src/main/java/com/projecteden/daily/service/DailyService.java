@@ -34,6 +34,14 @@ public class DailyService {
 	private final HouseRepository houseRepository;
 	private final InventoryRepository inventoryRepository;
 	private final SeedRepository seedRepository;
+import com.projecteden.daily.dto.PlantMissionCompleteResponse;
+import com.projecteden.daily.repository.DailyMissionRepository;
+
+@Service
+public class DailyService {
+
+	private final DailyMissionRepository dailyMissionRepository;
+	private final CharacterRepository characterRepository;
 	private final Clock clock;
 
 	public DailyService(
@@ -50,6 +58,9 @@ public class DailyService {
 		this.houseRepository = houseRepository;
 		this.inventoryRepository = inventoryRepository;
 		this.seedRepository = seedRepository;
+			Clock clock) {
+		this.dailyMissionRepository = dailyMissionRepository;
+		this.characterRepository = characterRepository;
 		this.clock = clock;
 	}
 

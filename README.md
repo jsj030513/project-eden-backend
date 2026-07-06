@@ -521,3 +521,4 @@ Authorization: Bearer {accessToken}
 - 완료 보상은 Gold `+50`, FLOWER Seed `+2`입니다.
 - 미구현 상태인 Photo Mission은 현재 보상 조건에 포함되지 않습니다.
 - 공명 경험치와 랜덤 보상은 아직 지급하지 않습니다.
+
