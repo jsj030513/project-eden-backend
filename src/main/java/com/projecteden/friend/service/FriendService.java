@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.common.exception.ForbiddenOperationException;
 import com.projecteden.friend.domain.Friend;
 import com.projecteden.friend.domain.FriendStatus;
 import com.projecteden.friend.dto.FriendRequestDTO;
@@ -67,7 +68,7 @@ public class FriendService {
 	public FriendResponseDTO accept(Long userId, Long requestId) {
 		Friend friend = findFriend(requestId);
 		if (!friend.getReceiver().getId().equals(userId)) {
-			throw new IllegalArgumentException("친구 요청을 수락할 권한이 없습니다.");
+			throw new ForbiddenOperationException("친구 요청을 수락할 권한이 없습니다.");
 		}
 		if (friend.getStatus() != FriendStatus.PENDING) {
 			throw new IllegalArgumentException("이미 처리된 친구 요청입니다.");
@@ -82,7 +83,7 @@ public class FriendService {
 		Friend friend = findFriend(friendshipId);
 		if (!friend.getRequester().getId().equals(userId)
 				&& !friend.getReceiver().getId().equals(userId)) {
-			throw new IllegalArgumentException("친구 관계를 삭제할 권한이 없습니다.");
+			throw new ForbiddenOperationException("친구 관계를 삭제할 권한이 없습니다.");
 		}
 		friendRepository.delete(friend);
 	}

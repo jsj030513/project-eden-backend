@@ -13,6 +13,7 @@ import com.projecteden.cheer.domain.Cheer;
 import com.projecteden.cheer.dto.CheerResponseDTO;
 import com.projecteden.cheer.repository.CheerRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.common.exception.ForbiddenOperationException;
 import com.projecteden.friend.service.FriendService;
 import com.projecteden.notification.domain.NotificationType;
 import com.projecteden.notification.service.NotificationService;
@@ -51,7 +52,7 @@ public class CheerService {
 		User sender = findUser(senderId);
 		User receiver = findUser(receiverId);
 		if (!friendService.areFriends(sender, receiver)) {
-			throw new IllegalArgumentException("친구에게만 응원할 수 있습니다.");
+			throw new ForbiddenOperationException("친구에게만 응원할 수 있습니다.");
 		}
 
 		LocalDate today = LocalDate.now(clock);

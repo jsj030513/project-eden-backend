@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.projecteden.character.domain.Character;
 import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.common.exception.ForbiddenOperationException;
 import com.projecteden.friend.service.FriendService;
 import com.projecteden.profile.domain.Profile;
 import com.projecteden.profile.repository.ProfileRepository;
@@ -52,7 +53,7 @@ public class IslandVisitService {
 		User visitor = findUser(userId);
 		User owner = findUser(friendId);
 		if (!friendService.areFriends(visitor, owner)) {
-			throw new IllegalArgumentException("친구의 섬만 방문할 수 있습니다.");
+			throw new ForbiddenOperationException("친구의 섬만 방문할 수 있습니다.");
 		}
 		IslandVisit visit = visitRepository.save(IslandVisit.create(visitor, owner));
 		return toResponse(

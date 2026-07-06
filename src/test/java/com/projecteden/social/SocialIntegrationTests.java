@@ -10,6 +10,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -61,6 +62,7 @@ class SocialIntegrationTests {
 	@Autowired RankingRepository rankings;
 	@Autowired FriendService friendService;
 	@Autowired NotificationService notificationService;
+	@Autowired ApplicationContext applicationContext;
 	@Autowired PasswordEncoder encoder;
 	@Autowired JwtTokenProvider tokens;
 	private User first; private User second; private Character secondCharacter; private String firstToken; private String secondToken;
@@ -82,6 +84,13 @@ class SocialIntegrationTests {
 		friendService.request(first.getId(),new FriendRequestDTO(null,"루나"));
 		mockMvc.perform(post("/api/friends").header("Authorization",bearer(firstToken)).contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"루나\"}")) .andExpect(status().isBadRequest());
 		mockMvc.perform(post("/api/friends").header("Authorization",bearer(firstToken)).contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"에덴\"}")) .andExpect(status().isBadRequest());
+	}
+
+	@Test void anotherUserCannotAcceptFriendRequest() throws Exception {
+		var request = friendService.request(first.getId(), new FriendRequestDTO(null, "루나"));
+		mockMvc.perform(put("/api/friends/{id}/accept", request.friendshipId())
+				.header("Authorization", bearer(firstToken)))
+				.andExpect(status().isForbidden());
 	}
 
 	@Test void friendIslandVisitIsRecorded() throws Exception {
@@ -110,6 +119,15 @@ class SocialIntegrationTests {
 		mockMvc.perform(get("/api/notifications").header("Authorization",bearer(firstToken))).andExpect(status().isOk()).andExpect(jsonPath("$",hasSize(2)));
 		Long id=notifications.findByUserOrderByCreatedAtDesc(first).getFirst().getId();
 		mockMvc.perform(put("/api/notifications/{id}/read",id).header("Authorization",bearer(firstToken))).andExpect(status().isOk()).andExpect(jsonPath("$.read").value(true));
+		mockMvc.perform(put("/api/notifications/{id}/read",id).header("Authorization",bearer(firstToken))).andExpect(status().isOk()).andExpect(jsonPath("$.read").value(true));
+	}
+
+	@Test void anotherUsersNotificationCannotBeRead() throws Exception {
+		notificationService.create(second, NotificationType.SEASON_CHANGE, "계절이 바뀌었습니다.");
+		Long notificationId = notifications.findByUserOrderByCreatedAtDesc(second).getFirst().getId();
+		mockMvc.perform(put("/api/notifications/{id}/read", notificationId)
+				.header("Authorization", bearer(firstToken)))
+				.andExpect(status().isForbidden());
 	}
 
 	@Test void profileCanBeViewedAndUpdated() throws Exception {
@@ -139,11 +157,15 @@ class SocialIntegrationTests {
 		assertEquals(1, dailyPromptCount);
 	}
 
+	@Test void dailyPromptSchedulerIsDisabledInTestProfile() {
+		assertEquals(false, applicationContext.containsBean("dailyPromptScheduler"));
+	}
+
 	@Test void nonFriendCannotVisitOrCheer() throws Exception {
 		mockMvc.perform(post("/api/visits/{id}",second.getId()).header("Authorization",bearer(firstToken)))
-				.andExpect(status().isBadRequest());
+				.andExpect(status().isForbidden());
 		mockMvc.perform(post("/api/cheers/{id}",second.getId()).header("Authorization",bearer(firstToken)))
-				.andExpect(status().isBadRequest());
+				.andExpect(status().isForbidden());
 	}
 
 	@Test void friendRankingIsSortedByMetrics() throws Exception {
