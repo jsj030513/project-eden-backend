@@ -11,6 +11,7 @@ import com.projecteden.house.repository.HouseRepository;
 import com.projecteden.inventory.domain.Inventory;
 import com.projecteden.inventory.dto.CreateInventoryResponse;
 import com.projecteden.inventory.repository.InventoryRepository;
+import com.projecteden.seed.service.SeedService;
 import com.projecteden.world.domain.World;
 import com.projecteden.world.repository.WorldRepository;
 
@@ -21,16 +22,19 @@ public class InventoryService {
 	private final HouseRepository houseRepository;
 	private final WorldRepository worldRepository;
 	private final CharacterRepository characterRepository;
+	private final SeedService seedService;
 
 	public InventoryService(
 			InventoryRepository inventoryRepository,
 			HouseRepository houseRepository,
 			WorldRepository worldRepository,
-			CharacterRepository characterRepository) {
+			CharacterRepository characterRepository,
+			SeedService seedService) {
 		this.inventoryRepository = inventoryRepository;
 		this.houseRepository = houseRepository;
 		this.worldRepository = worldRepository;
 		this.characterRepository = characterRepository;
+		this.seedService = seedService;
 	}
 
 	@Transactional
@@ -49,8 +53,10 @@ public class InventoryService {
 		}
 
 		Inventory inventory = inventoryRepository.save(Inventory.create(house));
+		Long characterId = house.getWorld().getCharacter().getId();
+		seedService.createStarterSeeds(characterId);
 
-		// TODO: 향후 Item, Photo, Furniture, Seed, Pet, Craft 시스템과 연결한다.
+		// TODO: 향후 Item, Photo, Furniture, Pet, Craft 시스템과 연결한다.
 		return toResponse(inventory);
 	}
 
