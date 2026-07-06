@@ -1,4 +1,4 @@
-package com.projecteden.seed;
+package com.projecteden.plant;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +31,6 @@ import com.projecteden.inventory.repository.InventoryRepository;
 import com.projecteden.plant.repository.PlantRepository;
 import com.projecteden.region.repository.RegionRepository;
 import com.projecteden.region.service.RegionService;
-import com.projecteden.seed.domain.SeedType;
 import com.projecteden.seed.repository.SeedRepository;
 import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
@@ -41,28 +40,28 @@ import com.projecteden.world.repository.WorldRepository;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class SeedIntegrationTests {
+class PlantIntegrationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Autowired
-	private SeedRepository seedRepository;
-
-	@Autowired
 	private PlantRepository plantRepository;
 
 	@Autowired
-	private RegionRepository regionRepository;
-
-	@Autowired
-	private RegionService regionService;
+	private SeedRepository seedRepository;
 
 	@Autowired
 	private InventoryRepository inventoryRepository;
 
 	@Autowired
 	private HouseRepository houseRepository;
+
+	@Autowired
+	private RegionRepository regionRepository;
+
+	@Autowired
+	private RegionService regionService;
 
 	@Autowired
 	private WorldRepository worldRepository;
@@ -86,7 +85,7 @@ class SeedIntegrationTests {
 		deleteTestData();
 
 		User user = userRepository.save(new User(
-				"seed@example.com",
+				"plant@example.com",
 				passwordEncoder.encode("password123"),
 				"eden"));
 		Character character = characterRepository.save(Character.create(
@@ -113,56 +112,67 @@ class SeedIntegrationTests {
 	}
 
 	@Test
-	void inventoryCreationGrantsStarterSeeds() throws Exception {
-		mockMvc.perform(get("/api/seeds/me")
-				.header("Authorization", "Bearer " + accessToken))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$", hasSize(1)));
+	void plantingSeedCreatesPlant() throws Exception {
+		performPlant().andExpect(status().isOk());
+		assertEquals(1, plantRepository.count());
 	}
 
 	@Test
-	void starterSeedsContainFiveFlowers() throws Exception {
-		mockMvc.perform(get("/api/seeds/me")
-				.header("Authorization", "Bearer " + accessToken))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].seedType").value("FLOWER"))
-				.andExpect(jsonPath("$[0].quantity").value(5));
-	}
-
-	@Test
-	void plantSeedSucceeds() throws Exception {
+	void firstPlantIsResonanceBoosted() throws Exception {
 		performPlant()
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.seedType").value("FLOWER"))
-				.andExpect(jsonPath("$.plantId").isNumber())
-				.andExpect(jsonPath("$.plantStage").value("SEED"))
 				.andExpect(jsonPath("$.resonanceBoosted").value(true));
 	}
 
 	@Test
-	void plantingDecreasesQuantity() throws Exception {
+	void secondPlantIsNotResonanceBoosted() throws Exception {
+		performPlant().andExpect(status().isOk());
+		performPlant()
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.resonanceBoosted").value(false));
+	}
+
+	@Test
+	void plantStageDefaultsToSeed() throws Exception {
+		performPlant()
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.plantStage").value("SEED"));
+	}
+
+	@Test
+	void plantIsCreatedInFlowerField() throws Exception {
+		performPlant().andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/plants/me")
+				.header("Authorization", "Bearer " + accessToken))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].regionType").value("FLOWER_FIELD"));
+	}
+
+	@Test
+	void getMyPlantsSucceeds() throws Exception {
+		performPlant().andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/plants/me")
+				.header("Authorization", "Bearer " + accessToken))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(1)))
+				.andExpect(jsonPath("$[0].seedType").value("FLOWER"))
+				.andExpect(jsonPath("$[0].plantedAt").isNotEmpty());
+	}
+
+	@Test
+	void getMyPlantsFailsWithoutAuthentication() throws Exception {
+		mockMvc.perform(get("/api/plants/me"))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void plantingStillDecreasesSeedQuantity() throws Exception {
 		performPlant()
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.remaining").value(4));
-
 		assertEquals(4, seedRepository.findAll().getFirst().getQuantity());
-	}
-
-	@Test
-	void plantingFailsWhenSeedsAreEmpty() throws Exception {
-		for (int i = 0; i < 5; i++) {
-			performPlant().andExpect(status().isOk());
-		}
-
-		performPlant()
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message").value("씨앗이 부족합니다."));
-	}
-
-	@Test
-	void getSeedsFailsWithoutAuthentication() throws Exception {
-		mockMvc.perform(get("/api/seeds/me"))
-				.andExpect(status().isUnauthorized());
 	}
 
 	private org.springframework.test.web.servlet.ResultActions performPlant() throws Exception {
@@ -171,9 +181,9 @@ class SeedIntegrationTests {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
 						{
-						  "seedType": "%s"
+						  "seedType": "FLOWER"
 						}
-						""".formatted(SeedType.FLOWER.name())));
+						"""));
 	}
 
 	private void deleteTestData() {

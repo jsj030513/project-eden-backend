@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.projecteden.seed.dto.PlantSeedRequest;
-import com.projecteden.seed.dto.PlantSeedResponse;
+import com.projecteden.plant.dto.PlantSeedResultResponse;
 import com.projecteden.seed.dto.SeedResponse;
 import com.projecteden.seed.service.SeedService;
 import com.projecteden.user.domain.User;
@@ -34,7 +34,7 @@ public class SeedController {
 	}
 
 	@PostMapping("/plant")
-	public ResponseEntity<PlantSeedResponse> plantSeed(
+	public ResponseEntity<PlantSeedResultResponse> plantSeed(
 			@AuthenticationPrincipal User user,
 			@Valid @RequestBody PlantSeedRequest request) {
 		return ResponseEntity.ok(seedService.plantMySeed(user.getId(), request.seedType()));

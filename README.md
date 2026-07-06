@@ -311,11 +311,14 @@ Content-Type: application/json
 ```json
 {
   "seedType": "FLOWER",
-  "remaining": 4
+  "remaining": 4,
+  "plantId": 1,
+  "plantStage": "SEED",
+  "resonanceBoosted": true
 }
 ```
 
-> 현재는 씨앗 수량만 차감합니다. 첫 씨앗의 공명 효과는 다음 Plant 성장 Sprint에서 적용할 예정입니다.
+씨앗을 심으면 FLOWER_FIELD에 `SEED` 단계의 Plant가 생성됩니다.
 
 ## Tutorial API
 
@@ -386,3 +389,26 @@ Authorization: Bearer {accessToken}
   }
 ]
 ```
+
+## Plant API
+
+### 내 식물 조회
+
+```http
+GET /api/plants/me
+Authorization: Bearer {accessToken}
+```
+
+Plant 단계:
+
+| PlantStage | 설명 |
+|---|---|
+| SEED | 씨앗 상태 |
+| SPROUT | 새싹 |
+| GROWING | 성장 중 |
+| BLOOMED | 개화 또는 완성 상태 |
+| WITHERED | 시든 상태 |
+
+현재 Sprint에서는 Plant가 `SEED` 단계로만 생성되며 성장 단계는 변경하지 않습니다.
+
+첫 Plant는 `resonanceBoosted=true`로 생성됩니다. 이는 튜토리얼 첫 씨앗에 빠른 성장 규칙을 적용하기 위한 표시값이며 실제 공명 성장 효과는 다음 Sprint에서 구현할 예정입니다.
