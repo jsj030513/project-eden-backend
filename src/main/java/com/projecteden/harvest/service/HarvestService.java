@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.projecteden.character.domain.Character;
 import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.daily.service.DailyService;
 import com.projecteden.harvest.dto.HarvestResponse;
 import com.projecteden.house.domain.House;
 import com.projecteden.house.repository.HouseRepository;
@@ -34,6 +35,7 @@ public class HarvestService {
 	private final HouseRepository houseRepository;
 	private final WorldRepository worldRepository;
 	private final CharacterRepository characterRepository;
+	private final DailyService dailyService;
 
 	public HarvestService(
 			PlantRepository plantRepository,
@@ -42,7 +44,8 @@ public class HarvestService {
 			InventoryRepository inventoryRepository,
 			HouseRepository houseRepository,
 			WorldRepository worldRepository,
-			CharacterRepository characterRepository) {
+			CharacterRepository characterRepository,
+			DailyService dailyService) {
 		this.plantRepository = plantRepository;
 		this.plantService = plantService;
 		this.seedRepository = seedRepository;
@@ -50,6 +53,7 @@ public class HarvestService {
 		this.houseRepository = houseRepository;
 		this.worldRepository = worldRepository;
 		this.characterRepository = characterRepository;
+		this.dailyService = dailyService;
 	}
 
 	@Transactional
@@ -73,6 +77,7 @@ public class HarvestService {
 				.orElseGet(() -> seedRepository.save(Seed.create(inventory, seedType, 0)));
 		rewardSeed.addQuantity(1);
 		plantRepository.delete(plant);
+		dailyService.completeHarvestMission(plant.getCharacter().getId());
 
 		return new HarvestResponse(
 				plantId,
