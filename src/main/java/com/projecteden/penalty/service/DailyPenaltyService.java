@@ -1,2 +1,61 @@
-package com.projecteden.penalty.service; import java.time.*; import java.time.temporal.ChronoUnit; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional; import com.projecteden.common.exception.ResourceNotFoundException; import com.projecteden.penalty.domain.*; import com.projecteden.penalty.dto.DailyPenaltyResponse; import com.projecteden.penalty.repository.DailyPenaltyRepository; import com.projecteden.user.domain.User; import com.projecteden.user.repository.UserRepository;
-@Service public class DailyPenaltyService{private final DailyPenaltyRepository penalties;private final UserRepository users;private final Clock clock;public DailyPenaltyService(DailyPenaltyRepository penalties,UserRepository users,Clock clock){this.penalties=penalties;this.users=users;this.clock=clock;}@Transactional public DailyPenaltyResponse get(Long userId){User u=users.findById(userId).orElseThrow(()->new ResourceNotFoundException("사용자를 찾을 수 없습니다."));DailyPenalty p=penalties.findByUser(u).orElseGet(()->penalties.save(DailyPenalty.create(u)));LocalDate last=u.getLastLoginAt()==null?LocalDate.now(clock):u.getLastLoginAt().toLocalDate();int days=(int)Math.max(0,ChronoUnit.DAYS.between(last,LocalDate.now(clock)));p.updateMissedDays(days);PenaltyStage stage=days==0?PenaltyStage.NONE:days==1?PenaltyStage.WEEDS:days==2?PenaltyStage.LEAVES:days==3?PenaltyStage.WILTED_FLOWERS:PenaltyStage.DESOLATE_ISLAND;return new DailyPenaltyResponse(days,stage,"게임 데이터는 유지되며 섬의 시각적 상태만 변경됩니다.");}}
+package com.projecteden.penalty.service;
+
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.penalty.domain.DailyPenalty;
+import com.projecteden.penalty.domain.PenaltyStage;
+import com.projecteden.penalty.dto.DailyPenaltyResponse;
+import com.projecteden.penalty.repository.DailyPenaltyRepository;
+import com.projecteden.user.domain.User;
+import com.projecteden.user.repository.UserRepository;
+
+@Service
+public class DailyPenaltyService {
+
+	private final DailyPenaltyRepository penaltyRepository;
+	private final UserRepository userRepository;
+	private final Clock clock;
+
+	public DailyPenaltyService(
+			DailyPenaltyRepository penaltyRepository,
+			UserRepository userRepository,
+			Clock clock) {
+		this.penaltyRepository = penaltyRepository;
+		this.userRepository = userRepository;
+		this.clock = clock;
+	}
+
+	@Transactional
+	public DailyPenaltyResponse get(Long userId) {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."));
+		DailyPenalty penalty = penaltyRepository.findByUser(user)
+				.orElseGet(() -> penaltyRepository.save(DailyPenalty.create(user)));
+		LocalDate today = LocalDate.now(clock);
+		LocalDate lastLoginDate = user.getLastLoginAt() == null
+				? today
+				: user.getLastLoginAt().toLocalDate();
+		int missedDays = (int) Math.max(0, ChronoUnit.DAYS.between(lastLoginDate, today));
+		penalty.updateMissedDays(missedDays);
+		return new DailyPenaltyResponse(
+				missedDays,
+				stageFor(missedDays),
+				"게임 데이터는 유지되며 섬의 시각적 상태만 변경됩니다.");
+	}
+
+	private PenaltyStage stageFor(int missedDays) {
+		return switch (missedDays) {
+			case 0 -> PenaltyStage.NONE;
+			case 1 -> PenaltyStage.WEEDS;
+			case 2 -> PenaltyStage.LEAVES;
+			case 3 -> PenaltyStage.WILTED_FLOWERS;
+			default -> PenaltyStage.DESOLATE_ISLAND;
+		};
+	}
+}

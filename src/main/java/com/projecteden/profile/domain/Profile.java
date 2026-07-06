@@ -15,7 +15,17 @@ public class Profile {
 	protected Profile() {}
 	private Profile(User user) { this.user = user; this.joinDate = LocalDate.now(); }
 	public static Profile create(User user) { return new Profile(user); }
-	public void update(String avatarUrl, String creature, String island) { this.avatarUrl = avatarUrl; this.representativeCreature = creature; this.representativeIsland = island; }
+	public void update(String avatarUrl, String creature, String island) {
+		if (avatarUrl != null) {
+			this.avatarUrl = avatarUrl;
+		}
+		if (creature != null) {
+			this.representativeCreature = creature;
+		}
+		if (island != null) {
+			this.representativeIsland = island;
+		}
+	}
 	public Long getUserId() { return userId; }
 	public User getUser() { return user; }
 	public String getAvatarUrl() { return avatarUrl; }

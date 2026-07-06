@@ -118,6 +118,34 @@ class SocialIntegrationTests {
 		mockMvc.perform(get("/api/profiles/me").header("Authorization",bearer(firstToken))).andExpect(status().isOk()).andExpect(jsonPath("$.representativeIsland").value("에덴섬"));
 	}
 
+	@Test void partialProfileUpdateKeepsExistingValues() throws Exception {
+		mockMvc.perform(put("/api/profiles/me").header("Authorization",bearer(firstToken)).contentType(MediaType.APPLICATION_JSON).content("{\"avatarUrl\":\"/avatar.png\",\"representativeIsland\":\"에덴섬\"}"))
+				.andExpect(status().isOk());
+		mockMvc.perform(put("/api/profiles/me").header("Authorization",bearer(firstToken)).contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"새에덴\"}"))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.avatarUrl").value("/avatar.png")).andExpect(jsonPath("$.representativeIsland").value("에덴섬"));
+	}
+
+	@Test void duplicateNicknameIsRejected() throws Exception {
+		mockMvc.perform(put("/api/profiles/me").header("Authorization",bearer(firstToken)).contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"루나\"}"))
+				.andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value("이미 사용 중인 닉네임입니다."));
+	}
+
+	@Test void dailyPromptCreationIsIdempotentPerDay() {
+		notificationService.createDailyPrompts();
+		notificationService.createDailyPrompts();
+		long dailyPromptCount = notifications.findByUserOrderByCreatedAtDesc(first).stream()
+				.filter(notification -> notification.getType() == NotificationType.DAILY_PROMPT)
+				.count();
+		assertEquals(1, dailyPromptCount);
+	}
+
+	@Test void nonFriendCannotVisitOrCheer() throws Exception {
+		mockMvc.perform(post("/api/visits/{id}",second.getId()).header("Authorization",bearer(firstToken)))
+				.andExpect(status().isBadRequest());
+		mockMvc.perform(post("/api/cheers/{id}",second.getId()).header("Authorization",bearer(firstToken)))
+				.andExpect(status().isBadRequest());
+	}
+
 	@Test void friendRankingIsSortedByMetrics() throws Exception {
 		acceptFriendship();Ranking a=Ranking.create(users.findById(first.getId()).orElseThrow());a.updateMetrics(2,10,1);rankings.save(a);Ranking b=Ranking.create(users.findById(second.getId()).orElseThrow());b.updateMetrics(5,8,1);rankings.save(b);
 		mockMvc.perform(get("/api/ranking/friends").header("Authorization",bearer(firstToken))).andExpect(status().isOk()).andExpect(jsonPath("$",hasSize(2))).andExpect(jsonPath("$[0].nickname").value("루나"));
