@@ -432,3 +432,44 @@ Plant 단계:
 | 3일 | BLOOMED |
 
 `WITHERED` 단계와 자동 스케줄러는 향후 Sprint에서 구현할 예정입니다.
+
+## Harvest API
+
+### 수확 가능한 식물 조회
+
+```http
+GET /api/plants/harvestable
+Authorization: Bearer {accessToken}
+```
+
+성장 상태를 갱신한 뒤 `BLOOMED` 상태의 Plant만 반환합니다.
+
+### Plant 수확
+
+```http
+POST /api/plants/{plantId}/harvest
+Authorization: Bearer {accessToken}
+```
+
+```json
+{
+  "plantId": 1,
+  "seedType": "FLOWER",
+  "earnedGold": 10,
+  "earnedSeedType": "FLOWER",
+  "earnedSeedQuantity": 1,
+  "message": "FLOWER를 수확했습니다."
+}
+```
+
+수확된 Plant는 삭제되며 동일 Plant를 다시 수확할 수 없습니다.
+
+### 수확 보상
+
+| SeedType | Gold | Seed |
+|---|---:|---:|
+| FLOWER | 10 | FLOWER +1 |
+| WHEAT | 15 | WHEAT +1 |
+| CARROT | 20 | CARROT +1 |
+| POTATO | 20 | POTATO +1 |
+| TOMATO | 25 | TOMATO +1 |

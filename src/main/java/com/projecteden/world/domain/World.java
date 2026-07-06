@@ -76,6 +76,10 @@ public class World {
 		return new World(character, character.getName() + "의 세계", seed);
 	}
 
+	public void addGold(int amount) {
+		gold += amount;
+	}
+
 	@PrePersist
 	void prePersist() {
 		LocalDateTime now = LocalDateTime.now();

@@ -65,6 +65,10 @@ public class Seed {
 		return quantity;
 	}
 
+	public void addQuantity(int amount) {
+		quantity += amount;
+	}
+
 	@PrePersist
 	void prePersist() {
 		LocalDateTime now = LocalDateTime.now();
