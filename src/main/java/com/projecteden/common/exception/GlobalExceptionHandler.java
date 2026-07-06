@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,5 +34,12 @@ public class GlobalExceptionHandler {
 			ResourceNotFoundException exception) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
 				.body(Map.of("message", exception.getMessage()));
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<Map<String, String>> handleDataIntegrityViolationException(
+			DataIntegrityViolationException exception) {
+		return ResponseEntity.badRequest()
+				.body(Map.of("message", "이미 존재하거나 사용할 수 없는 값입니다."));
 	}
 }

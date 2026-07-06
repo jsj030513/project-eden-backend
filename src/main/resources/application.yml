@@ -1,6 +1,8 @@
 spring:
   application:
     name: project-eden-backend
+  jpa:
+    open-in-view: false
 
 server:
   port: 8080

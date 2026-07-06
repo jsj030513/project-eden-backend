@@ -655,3 +655,68 @@ Authorization: Bearer {accessToken}
 - 하루 최대 공명 보상 횟수는 10회입니다.
 - `recognized=false`인 결과는 공명할 수 없습니다.
 - 도감, 스토리, 친구 보너스와 계절 이벤트는 아직 구현하지 않았습니다.
+
+## Social API
+
+모든 Social API는 JWT 인증이 필요합니다.
+
+### 친구
+
+```http
+POST /api/friends
+PUT /api/friends/{friendshipId}/accept
+DELETE /api/friends/{friendshipId}
+GET /api/friends
+GET /api/friends/pending
+```
+
+친구 요청은 닉네임 또는 friendCode로 전송합니다. friendCode는 현재 User ID 또는 이메일을 사용합니다.
+
+```json
+{
+  "nickname": "eden_friend"
+}
+```
+
+자기 자신, 중복 요청, 이미 친구인 사용자에 대한 요청은 거부됩니다.
+
+### 섬 방문과 응원
+
+```http
+POST /api/visits/{friendId}
+GET /api/visits/history
+POST /api/cheers/{friendId}
+```
+
+섬 방문은 친구 관계에서만 가능하고 읽기 전용 정보를 반환합니다. 같은 친구 응원은 하루 한 번 가능하며 수신 캐릭터에게 EXP `+5`와 알림을 지급합니다.
+
+### 미접속 패널티
+
+```http
+GET /api/penalties/me
+```
+
+| 미접속 일수 | 표시 단계 |
+|---:|---|
+| 0 | NONE |
+| 1 | WEEDS |
+| 2 | LEAVES |
+| 3 | WILTED_FLOWERS |
+| 4 이상 | DESOLATE_ISLAND |
+
+패널티는 시각적 상태만 반환하며 아이템, 건물, 경험치 등 게임 데이터를 삭제하거나 감소시키지 않습니다.
+
+### 알림, 프로필, 친구 랭킹
+
+```http
+GET /api/notifications
+PUT /api/notifications/{notificationId}/read
+GET /api/profiles/me
+PUT /api/profiles/me
+GET /api/ranking/friends
+```
+
+- 매일 오전 8시에 `DAILY_PROMPT` 알림을 생성합니다.
+- `CHEER_RECEIVED`, `SEASON_CHANGE`, `FRIEND_ADDED` 알림을 지원합니다.
+- 프로필에서 닉네임, 아바타, 대표 섬과 대표 생물을 수정할 수 있습니다.
+- 랭킹은 친구와 본인만 대상으로 하며 전역 랭킹은 제공하지 않습니다.

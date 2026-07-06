@@ -1,5 +1,7 @@
 package com.projecteden.auth.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +30,7 @@ public class AuthService {
 		this.jwtTokenProvider = jwtTokenProvider;
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public LoginResponse login(LoginRequest request) {
 		User user = userRepository.findByEmail(request.email())
 				.orElseThrow(() -> new IllegalArgumentException(LOGIN_FAILURE_MESSAGE));
@@ -36,6 +38,7 @@ public class AuthService {
 		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
 			throw new IllegalArgumentException(LOGIN_FAILURE_MESSAGE);
 		}
+		user.recordLogin(LocalDateTime.now());
 
 		String accessToken = jwtTokenProvider.generateAccessToken(user);
 		return new LoginResponse(

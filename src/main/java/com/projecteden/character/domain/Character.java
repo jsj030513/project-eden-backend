@@ -161,6 +161,10 @@ public class Character {
 		return energy;
 	}
 
+	public void addExp(int amount) {
+		exp += amount;
+	}
+
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
