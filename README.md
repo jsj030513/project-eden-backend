@@ -283,6 +283,40 @@ Authorization: Bearer {accessToken}
 ]
 ```
 
+## Seed API
+
+Inventory 생성 시 튜토리얼용 `FLOWER` 씨앗 5개가 자동 지급됩니다.
+
+### 내 씨앗 조회
+
+```http
+GET /api/seeds/me
+Authorization: Bearer {accessToken}
+```
+
+### 씨앗 심기
+
+```http
+POST /api/seeds/plant
+Authorization: Bearer {accessToken}
+Content-Type: application/json
+```
+
+```json
+{
+  "seedType": "FLOWER"
+}
+```
+
+```json
+{
+  "seedType": "FLOWER",
+  "remaining": 4
+}
+```
+
+> 현재는 씨앗 수량만 차감합니다. 첫 씨앗의 공명 효과는 다음 Plant 성장 Sprint에서 적용할 예정입니다.
+
 ## Tutorial API
 
 Character 생성 시 `WELCOME` 단계의 튜토리얼 진행 상태가 자동 생성됩니다.
