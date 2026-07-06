@@ -24,6 +24,6 @@ public class PlantController {
 
 	@GetMapping("/me")
 	public ResponseEntity<List<PlantResponse>> getMyPlants(@AuthenticationPrincipal User user) {
-		return ResponseEntity.ok(plantService.getMyPlantsByUserId(user.getId()));
+		return ResponseEntity.ok(plantService.refreshMyPlantGrowth(user.getId()));
 	}
 }

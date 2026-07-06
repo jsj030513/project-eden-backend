@@ -409,6 +409,26 @@ Plant 단계:
 | BLOOMED | 개화 또는 완성 상태 |
 | WITHERED | 시든 상태 |
 
-현재 Sprint에서는 Plant가 `SEED` 단계로만 생성되며 성장 단계는 변경하지 않습니다.
+`GET /api/plants/me` 호출 시 현재 시간을 기준으로 성장 단계를 계산하고 저장합니다. 자동 성장 스케줄러는 아직 없습니다.
 
-첫 Plant는 `resonanceBoosted=true`로 생성됩니다. 이는 튜토리얼 첫 씨앗에 빠른 성장 규칙을 적용하기 위한 표시값이며 실제 공명 성장 효과는 다음 Sprint에서 구현할 예정입니다.
+### 공명 Plant 성장 규칙
+
+| 경과 시간 | PlantStage |
+|---|---|
+| 심은 직후 | SEED |
+| 10초 | SPROUT |
+| 30초 | GROWING |
+| 60초 | BLOOMED |
+
+첫 Plant는 `resonanceBoosted=true`로 생성되어 위 빠른 성장 규칙을 적용받습니다.
+
+### 일반 Plant 성장 규칙
+
+| 경과 시간 | PlantStage |
+|---|---|
+| 심은 직후 | SEED |
+| 1일 | SPROUT |
+| 2일 | GROWING |
+| 3일 | BLOOMED |
+
+`WITHERED` 단계와 자동 스케줄러는 향후 Sprint에서 구현할 예정입니다.

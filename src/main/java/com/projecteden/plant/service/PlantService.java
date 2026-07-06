@@ -1,5 +1,8 @@
 package com.projecteden.plant.service;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -8,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.projecteden.character.domain.Character;
 import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.plant.domain.Plant;
+import com.projecteden.plant.domain.PlantStage;
 import com.projecteden.plant.dto.PlantResponse;
 import com.projecteden.plant.repository.PlantRepository;
 import com.projecteden.region.domain.Region;
@@ -24,16 +28,19 @@ public class PlantService {
 	private final RegionRepository regionRepository;
 	private final WorldRepository worldRepository;
 	private final CharacterRepository characterRepository;
+	private final Clock clock;
 
 	public PlantService(
 			PlantRepository plantRepository,
 			RegionRepository regionRepository,
 			WorldRepository worldRepository,
-			CharacterRepository characterRepository) {
+			CharacterRepository characterRepository,
+			Clock clock) {
 		this.plantRepository = plantRepository;
 		this.regionRepository = regionRepository;
 		this.worldRepository = worldRepository;
 		this.characterRepository = characterRepository;
+		this.clock = clock;
 	}
 
 	@Transactional
@@ -65,11 +72,64 @@ public class PlantService {
 				.toList();
 	}
 
+	@Transactional
+	public List<PlantResponse> refreshPlantGrowth(Long characterId) {
+		LocalDateTime now = LocalDateTime.now(clock);
+		return plantRepository.findByCharacterId(characterId).stream()
+				.map(plant -> {
+					PlantStage calculatedStage = calculateStage(plant, now);
+					if (plant.getPlantStage() != calculatedStage) {
+						plant.updateStage(calculatedStage);
+					}
+					plant.touchGrowthCheckedAt(now);
+					return toResponse(plant);
+				})
+				.toList();
+	}
+
+	public PlantStage calculateStage(Plant plant, LocalDateTime now) {
+		Duration elapsed = Duration.between(plant.getPlantedAt(), now);
+		if (elapsed.isNegative()) {
+			return PlantStage.SEED;
+		}
+
+		if (plant.isResonanceBoosted()) {
+			if (elapsed.compareTo(Duration.ofSeconds(60)) >= 0) {
+				return PlantStage.BLOOMED;
+			}
+			if (elapsed.compareTo(Duration.ofSeconds(30)) >= 0) {
+				return PlantStage.GROWING;
+			}
+			if (elapsed.compareTo(Duration.ofSeconds(10)) >= 0) {
+				return PlantStage.SPROUT;
+			}
+			return PlantStage.SEED;
+		}
+
+		if (elapsed.compareTo(Duration.ofDays(3)) >= 0) {
+			return PlantStage.BLOOMED;
+		}
+		if (elapsed.compareTo(Duration.ofDays(2)) >= 0) {
+			return PlantStage.GROWING;
+		}
+		if (elapsed.compareTo(Duration.ofDays(1)) >= 0) {
+			return PlantStage.SPROUT;
+		}
+		return PlantStage.SEED;
+	}
+
 	@Transactional(readOnly = true)
 	public List<PlantResponse> getMyPlantsByUserId(Long userId) {
 		Character character = characterRepository.findByUserId(userId)
 				.orElseThrow(() -> new IllegalArgumentException("캐릭터를 찾을 수 없습니다."));
 		return getMyPlants(character.getId());
+	}
+
+	@Transactional
+	public List<PlantResponse> refreshMyPlantGrowth(Long userId) {
+		Character character = characterRepository.findByUserId(userId)
+				.orElseThrow(() -> new IllegalArgumentException("캐릭터를 찾을 수 없습니다."));
+		return refreshPlantGrowth(character.getId());
 	}
 
 	private PlantResponse toResponse(Plant plant) {

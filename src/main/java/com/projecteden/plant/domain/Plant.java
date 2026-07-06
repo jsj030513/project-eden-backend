@@ -75,6 +75,14 @@ public class Plant {
 		return new Plant(region, character, seedType, resonanceBoosted);
 	}
 
+	public void updateStage(PlantStage stage) {
+		this.plantStage = stage;
+	}
+
+	public void touchGrowthCheckedAt(LocalDateTime checkedAt) {
+		this.lastGrowthCheckedAt = checkedAt;
+	}
+
 	@PrePersist
 	void prePersist() {
 		LocalDateTime now = LocalDateTime.now();
