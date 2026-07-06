@@ -566,4 +566,37 @@ GET /api/photos/me
 Authorization: Bearer {accessToken}
 ```
 
-실제 파일 저장소, S3, AI Recognition, 공명 및 보상 연동은 아직 구현하지 않았습니다.
+실제 파일 저장소, S3, 공명 및 보상 연동은 아직 구현하지 않았습니다.
+
+## AI Recognition API
+
+현재 Recognition은 외부 AI API를 호출하지 않고 `MockRecognitionService`를 사용합니다.
+
+### 사진 인식
+
+```http
+POST /api/photos/{photoId}/recognize
+Authorization: Bearer {accessToken}
+```
+
+```json
+{
+  "id": 1,
+  "photoId": 1,
+  "recognizedObject": "FLOWER",
+  "confidence": 95,
+  "recognized": true
+}
+```
+
+동일한 사진에 인식 결과가 이미 존재하면 새로 생성하지 않고 기존 결과를 반환합니다.
+
+### 내 인식 결과 조회
+
+```http
+GET /api/photos/recognitions
+Authorization: Bearer {accessToken}
+```
+
+Mock AI는 이미지 URL이나 파일 내용을 분석하지 않고 항상 `FLOWER`, 신뢰도 `95`, 인식 성공을 반환합니다.
+Gemini, OpenAI Vision, 다중 객체 인식, 공명 계산 및 보상은 아직 구현하지 않았습니다.
