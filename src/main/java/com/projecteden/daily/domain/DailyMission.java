@@ -71,6 +71,16 @@ public class DailyMission {
 		harvestCompleted = true;
 	}
 
+	public void claimReward() {
+		if (!plantCompleted || !harvestCompleted) {
+			throw new IllegalArgumentException("일일 미션을 모두 완료해야 보상을 받을 수 있습니다.");
+		}
+		if (rewardClaimed) {
+			throw new IllegalArgumentException("이미 일일 미션 보상을 수령했습니다.");
+		}
+		rewardClaimed = true;
+	}
+
 	@PrePersist
 	void prePersist() {
 		LocalDateTime now = LocalDateTime.now();
