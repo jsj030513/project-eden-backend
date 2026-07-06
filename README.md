@@ -599,4 +599,59 @@ Authorization: Bearer {accessToken}
 ```
 
 Mock AI는 이미지 URL이나 파일 내용을 분석하지 않고 항상 `FLOWER`, 신뢰도 `95`, 인식 성공을 반환합니다.
-Gemini, OpenAI Vision, 다중 객체 인식, 공명 계산 및 보상은 아직 구현하지 않았습니다.
+Gemini, OpenAI Vision과 다중 객체 인식은 아직 구현하지 않았습니다.
+
+## Resonance API
+
+공명은 사진의 Recognition 결과와 캐릭터가 연결되어 Seed 또는 Gold 보상을 얻는 시스템입니다.
+
+### 공명 생성 및 보상 수령
+
+```http
+POST /api/resonances
+Authorization: Bearer {accessToken}
+Content-Type: application/json
+```
+
+```json
+{
+  "recognitionId": 1
+}
+```
+
+```json
+{
+  "id": 1,
+  "recognizedObject": "FLOWER",
+  "rewardType": "SEED",
+  "rewardSeedType": "FLOWER",
+  "rewardSeedQuantity": 1,
+  "rewardGold": 0,
+  "resonanceDate": "2026-07-06",
+  "message": "FLOWER와 공명하여 FLOWER 씨앗을 획득했습니다."
+}
+```
+
+### 내 공명 기록 조회
+
+```http
+GET /api/resonances/me
+Authorization: Bearer {accessToken}
+```
+
+### 공명 보상 규칙
+
+| RecognizedObject | RewardType | 보상 |
+|---|---|---|
+| FLOWER | SEED | FLOWER Seed +1 |
+| TOMATO | SEED | TOMATO Seed +1 |
+| CARROT | SEED | CARROT Seed +1 |
+| POTATO | SEED | POTATO Seed +1 |
+| WHEAT | SEED | WHEAT Seed +1 |
+| UNKNOWN | NONE | Gold +5 |
+
+- 동일 Recognition은 한 번만 공명할 수 있습니다.
+- 같은 대상의 공명 보상은 하루 한 번만 받을 수 있습니다.
+- 하루 최대 공명 보상 횟수는 10회입니다.
+- `recognized=false`인 결과는 공명할 수 없습니다.
+- 도감, 스토리, 친구 보너스와 계절 이벤트는 아직 구현하지 않았습니다.
