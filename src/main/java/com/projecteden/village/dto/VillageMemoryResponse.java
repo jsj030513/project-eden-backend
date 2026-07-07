@@ -1,0 +1,1 @@
+package com.projecteden.village.dto;import java.time.LocalDateTime;import com.projecteden.village.domain.VillageCategory;public record VillageMemoryResponse(VillageCategory category,int memoryCount,LocalDateTime lastRecordedAt){}

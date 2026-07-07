@@ -1,0 +1,7 @@
+package com.projecteden.village.domain;
+import java.time.LocalDateTime;import com.projecteden.character.domain.Character;import jakarta.persistence.*;
+@Entity@Table(name="village_memories",uniqueConstraints=@UniqueConstraint(columnNames={"character_id","category"}))public class VillageMemory{
+	@Id@GeneratedValue(strategy=GenerationType.IDENTITY)private Long id;@ManyToOne(fetch=FetchType.LAZY,optional=false)@JoinColumn(name="character_id",nullable=false)private Character character;@Enumerated(EnumType.STRING)@Column(nullable=false)private VillageCategory category;@Column(nullable=false)private int memoryCount;@Column(nullable=false)private LocalDateTime lastRecordedAt;private LocalDateTime createdAt;private LocalDateTime updatedAt;
+	protected VillageMemory(){}private VillageMemory(Character character,VillageCategory category,LocalDateTime now){this.character=character;this.category=category;this.memoryCount=1;this.lastRecordedAt=now;}public static VillageMemory create(Character character,VillageCategory category,LocalDateTime now){return new VillageMemory(character,category,now);}public void record(LocalDateTime now){memoryCount++;lastRecordedAt=now;}@PrePersist void prePersist(){LocalDateTime now=LocalDateTime.now();createdAt=now;updatedAt=now;}@PreUpdate void preUpdate(){updatedAt=LocalDateTime.now();}
+	public Long getId(){return id;}public Character getCharacter(){return character;}public VillageCategory getCategory(){return category;}public int getMemoryCount(){return memoryCount;}public LocalDateTime getLastRecordedAt(){return lastRecordedAt;}
+}

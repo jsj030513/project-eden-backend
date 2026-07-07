@@ -1,0 +1,1 @@
+package com.projecteden.village.dto;import java.time.LocalDateTime;import com.projecteden.village.domain.*;public record VillageHistoryResponse(VillageHistoryType historyType,VillageCategory category,VillageChangeType changeType,String message,LocalDateTime createdAt){}

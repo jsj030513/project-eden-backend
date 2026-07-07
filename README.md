@@ -874,3 +874,80 @@ Authorization: Bearer {accessToken}
 ```
 
 History에는 EP 획득, 레벨 상승, 스테이지 상승, 장식 해금처럼 실제 발생한 이벤트만 저장됩니다.
+
+## Living Village API
+
+> 당신은 마을을 꾸미지 않습니다. 마을이 당신을 닮아갑니다.
+
+Living Village는 오늘의 순간을 카테고리별 기억으로 남기고, 누적된 삶의 흔적에 따라 마을의 변화와 NPC 문구를 기록합니다. 실제 렌더링이나 직접 꾸미기 기능은 포함하지 않습니다.
+
+### Village Category
+
+| Recognition 결과 | VillageCategory |
+|---|---|
+| FLOWER | NATURE |
+| TOMATO, CARROT, POTATO, WHEAT | FOOD |
+| UNKNOWN | UNKNOWN |
+
+`WALK`, `WATER`, `ANIMAL`은 향후 Recognition 대상 확장을 위해 준비되어 있습니다.
+
+### Village Memory와 Change
+
+- Village Memory는 카테고리별 누적 기억 수와 최근 기록 시각을 관리합니다.
+- Village Change는 렌더링 데이터가 아니라 마을에 나타난 변화의 기록입니다.
+- 같은 변화는 한 번만 나타납니다.
+- UNKNOWN도 `QUIET_PLACE`라는 조용한 변화로 기록됩니다.
+
+주요 변화 임계값:
+
+| 기억 수 | FOOD | NATURE |
+|---:|---|---|
+| 1 | TABLE | FLOWER_PATH |
+| 5 | HERB_GARDEN | GARDEN |
+| 10 | BAKERY | FOREST_PATH |
+| 20 | CAFE | VIEWPOINT |
+
+### 내 마을 조회
+
+```http
+GET /api/village/me
+Authorization: Bearer {accessToken}
+```
+
+```json
+{
+  "dominantCategory": "NATURE",
+  "totalMemoryCount": 3,
+  "memories": [
+    {
+      "category": "NATURE",
+      "memoryCount": 3,
+      "lastRecordedAt": "2026-07-07T15:00:00"
+    }
+  ],
+  "changes": [
+    {
+      "category": "NATURE",
+      "changeType": "FLOWER_PATH",
+      "appeared": true,
+      "appearedAt": "2026-07-07T15:00:00",
+      "message": "꽃이 참 많이 피는 계절이네요."
+    }
+  ],
+  "latestMessage": "꽃이 참 많이 피는 계절이네요."
+}
+```
+
+### 마을 기록과 변화 조회
+
+```http
+GET /api/village/history
+Authorization: Bearer {accessToken}
+```
+
+```http
+GET /api/village/changes
+Authorization: Bearer {accessToken}
+```
+
+Village History는 `MEMORY_RECORDED`, `CHANGE_APPEARED`, `NPC_REACTION` 기록을 제공합니다. World Evolution이 활동의 성장 수치를 누적한다면, Living Village는 같은 순간이 마을의 풍경과 기억에 어떻게 머물렀는지를 기록합니다.
