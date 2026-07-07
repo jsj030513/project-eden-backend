@@ -1,0 +1,11 @@
+package com.projecteden.village.domain;
+
+public enum VillageTheme {
+	BLOOMING_VILLAGE,
+	WARM_VILLAGE,
+	WALKING_VILLAGE,
+	WATERSIDE_VILLAGE,
+	ANIMAL_FRIENDLY_VILLAGE,
+	QUIET_VILLAGE,
+	UNDEFINED
+}
