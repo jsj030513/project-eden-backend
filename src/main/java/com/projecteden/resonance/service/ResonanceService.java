@@ -14,6 +14,8 @@ import com.projecteden.character.domain.Character;
 import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
 import com.projecteden.collection.service.CollectionService;
+import com.projecteden.evolution.domain.EvolutionSourceType;
+import com.projecteden.evolution.service.EvolutionService;
 import com.projecteden.house.domain.House;
 import com.projecteden.house.repository.HouseRepository;
 import com.projecteden.inventory.domain.Inventory;
@@ -41,6 +43,7 @@ public class ResonanceService {
 	private final InventoryRepository inventoryRepository;
 	private final SeedRepository seedRepository;
 	private final CollectionService collectionService;
+	private final EvolutionService evolutionService;
 	private final Clock clock;
 
 	public ResonanceService(
@@ -52,6 +55,7 @@ public class ResonanceService {
 			InventoryRepository inventoryRepository,
 			SeedRepository seedRepository,
 			CollectionService collectionService,
+			EvolutionService evolutionService,
 			Clock clock) {
 		this.resonanceRepository = resonanceRepository;
 		this.recognitionRepository = recognitionRepository;
@@ -61,6 +65,7 @@ public class ResonanceService {
 		this.inventoryRepository = inventoryRepository;
 		this.seedRepository = seedRepository;
 		this.collectionService = collectionService;
+		this.evolutionService = evolutionService;
 		this.clock = clock;
 	}
 
@@ -94,6 +99,7 @@ public class ResonanceService {
 				reward.gold(),
 				today));
 		collectionService.registerDiscovery(characterId, recognition.getRecognizedObject());
+		evolutionService.addEvolutionPoint(characterId, EvolutionSourceType.RESONANCE);
 		return toResponse(resonance);
 	}
 

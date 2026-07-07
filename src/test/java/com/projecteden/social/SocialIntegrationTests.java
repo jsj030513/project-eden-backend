@@ -41,6 +41,9 @@ import com.projecteden.user.repository.UserRepository;
 import com.projecteden.visit.repository.IslandVisitRepository;
 import com.projecteden.world.domain.World;
 import com.projecteden.world.repository.WorldRepository;
+import com.projecteden.evolution.repository.WorldEvolutionRepository;
+import com.projecteden.evolution.repository.WorldDecorationRepository;
+import com.projecteden.evolution.repository.EvolutionHistoryRepository;
 
 import java.time.LocalDateTime;
 
@@ -65,6 +68,9 @@ class SocialIntegrationTests {
 	@Autowired ApplicationContext applicationContext;
 	@Autowired PasswordEncoder encoder;
 	@Autowired JwtTokenProvider tokens;
+	@Autowired EvolutionHistoryRepository evolutionHistories;
+	@Autowired WorldDecorationRepository worldDecorations;
+	@Autowired WorldEvolutionRepository worldEvolutions;
 	private User first; private User second; private Character secondCharacter; private String firstToken; private String secondToken;
 
 	@BeforeEach void setUp(){ clean(); first=createUser("social1@example.com","에덴");second=createUser("social2@example.com","루나");createCharacterAndWorld(first,"에덴");secondCharacter=createCharacterAndWorld(second,"루나");firstToken=tokens.generateAccessToken(first);secondToken=tokens.generateAccessToken(second); }
@@ -179,5 +185,5 @@ class SocialIntegrationTests {
 	private User createUser(String email,String nickname){return users.save(new User(email,encoder.encode("password123"),nickname));}
 	private Character createCharacterAndWorld(User u,String name){Character c=characters.save(Character.create(u,name,CharacterGender.NONE,HairStyle.PIXEL_CUT,"brown",Outfit.ROBE,CharacterJob.WIZARD));worlds.save(World.create(c,c.getId()));return c;}
 	private String bearer(String token){return "Bearer "+token;}
-	private void clean(){visits.deleteAll();cheers.deleteAll();notifications.deleteAll();friends.deleteAll();penalties.deleteAll();profiles.deleteAll();rankings.deleteAll();worlds.deleteAll();characters.deleteAll();users.deleteAll();}
+	private void clean(){evolutionHistories.deleteAll();worldDecorations.deleteAll();worldEvolutions.deleteAll();visits.deleteAll();cheers.deleteAll();notifications.deleteAll();friends.deleteAll();penalties.deleteAll();profiles.deleteAll();rankings.deleteAll();worlds.deleteAll();characters.deleteAll();users.deleteAll();}
 }

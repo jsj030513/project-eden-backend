@@ -43,6 +43,9 @@ import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
 import com.projecteden.world.domain.World;
 import com.projecteden.world.repository.WorldRepository;
+import com.projecteden.evolution.repository.WorldEvolutionRepository;
+import com.projecteden.evolution.repository.WorldDecorationRepository;
+import com.projecteden.evolution.repository.EvolutionHistoryRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -52,6 +55,7 @@ class CollectionAchievementIntegrationTests {
 	@Autowired CollectionRepository collections; @Autowired AchievementRepository achievements; @Autowired UserAchievementRepository userAchievements; @Autowired TitleRepository titles; @Autowired UserTitleRepository userTitles; @Autowired CharacterStatisticsRepository statistics;
 	@Autowired ResonanceRepository resonances; @Autowired RecognitionRepository recognitions; @Autowired PhotoRepository photos; @Autowired SeedRepository seeds; @Autowired InventoryRepository inventories; @Autowired HouseRepository houses; @Autowired WorldRepository worlds; @Autowired CharacterRepository characters; @Autowired UserRepository users;
 	@Autowired PasswordEncoder encoder; @Autowired JwtTokenProvider tokenProvider;
+	@Autowired EvolutionHistoryRepository evolutionHistories; @Autowired WorldDecorationRepository worldDecorations; @Autowired WorldEvolutionRepository worldEvolutions;
 	private Character character; private String token; private Recognition flowerRecognition;
 
 	@BeforeEach void setUp(){clean();User user=users.save(new User("collection@example.com",encoder.encode("password123"),"collector"));character=characters.save(Character.create(user,"수집가",CharacterGender.NONE,HairStyle.PIXEL_CUT,"brown",Outfit.ROBE,CharacterJob.WIZARD));World world=worlds.save(World.create(character,123L));House house=houses.save(House.create(world));Inventory inventory=inventories.save(Inventory.create(house));seeds.save(Seed.create(inventory,SeedType.FLOWER,5));flowerRecognition=recognition(RecognizedObject.FLOWER,true);token=tokenProvider.generateAccessToken(user);}
@@ -77,5 +81,5 @@ class CollectionAchievementIntegrationTests {
 	private org.springframework.test.web.servlet.ResultActions resonate(Recognition value)throws Exception{return mockMvc.perform(post("/api/resonances").header("Authorization",bearer()).contentType(MediaType.APPLICATION_JSON).content("{\"recognitionId\":"+value.getId()+"}"));}
 	private Recognition recognition(RecognizedObject object,boolean recognized){String stored=UUID.randomUUID()+".jpg";Photo photo=photos.save(Photo.create(character,null,"photo.jpg",stored,"image/jpeg",10,"/uploads/photos/"+stored));return recognitions.save(Recognition.create(photo,object,95,recognized));}
 	private String bearer(){return "Bearer "+token;}
-	private void clean(){userTitles.deleteAll();userAchievements.deleteAll();statistics.deleteAll();collections.deleteAll();resonances.deleteAll();recognitions.deleteAll();photos.deleteAll();seeds.deleteAll();inventories.deleteAll();houses.deleteAll();worlds.deleteAll();characters.deleteAll();users.deleteAll();}
+	private void clean(){evolutionHistories.deleteAll();worldDecorations.deleteAll();worldEvolutions.deleteAll();userTitles.deleteAll();userAchievements.deleteAll();statistics.deleteAll();collections.deleteAll();resonances.deleteAll();recognitions.deleteAll();photos.deleteAll();seeds.deleteAll();inventories.deleteAll();houses.deleteAll();worlds.deleteAll();characters.deleteAll();users.deleteAll();}
 }

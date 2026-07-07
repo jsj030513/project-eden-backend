@@ -14,6 +14,8 @@ import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
 import com.projecteden.photo.domain.Photo;
 import com.projecteden.photo.repository.PhotoRepository;
+import com.projecteden.evolution.domain.EvolutionSourceType;
+import com.projecteden.evolution.service.EvolutionService;
 
 @Service
 public class RecognitionApplicationService {
@@ -22,16 +24,19 @@ public class RecognitionApplicationService {
 	private final PhotoRepository photoRepository;
 	private final CharacterRepository characterRepository;
 	private final RecognitionService recognitionService;
+	private final EvolutionService evolutionService;
 
 	public RecognitionApplicationService(
 			RecognitionRepository recognitionRepository,
 			PhotoRepository photoRepository,
 			CharacterRepository characterRepository,
-			RecognitionService recognitionService) {
+			RecognitionService recognitionService,
+			EvolutionService evolutionService) {
 		this.recognitionRepository = recognitionRepository;
 		this.photoRepository = photoRepository;
 		this.characterRepository = characterRepository;
 		this.recognitionService = recognitionService;
+		this.evolutionService = evolutionService;
 	}
 
 	@Transactional
@@ -64,6 +69,10 @@ public class RecognitionApplicationService {
 				result.recognizedObject(),
 				result.confidence(),
 				result.recognized()));
+		if (recognition.isRecognized() && recognition.getRecognizedObject() != null) {
+			evolutionService.addEvolutionPoint(
+					photo.getCharacter().getId(), EvolutionSourceType.RECOGNITION);
+		}
 
 		// TODO: 다중 객체 인식, 공명 계산 및 Reward 시스템과 연결한다.
 		return toResponse(recognition);

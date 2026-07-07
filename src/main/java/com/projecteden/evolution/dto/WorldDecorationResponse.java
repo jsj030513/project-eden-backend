@@ -1,0 +1,1 @@
+package com.projecteden.evolution.dto;import java.time.LocalDateTime;import com.projecteden.evolution.domain.DecorationType;public record WorldDecorationResponse(DecorationType decorationType,boolean unlocked,LocalDateTime unlockedAt){}

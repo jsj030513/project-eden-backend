@@ -1,0 +1,7 @@
+package com.projecteden.evolution.domain;
+import java.time.LocalDateTime;import com.projecteden.character.domain.Character;import jakarta.persistence.*;
+@Entity @Table(name="world_decorations",uniqueConstraints=@UniqueConstraint(columnNames={"character_id","decoration_type"}))public class WorldDecoration{
+	@Id@GeneratedValue(strategy=GenerationType.IDENTITY)private Long id;@ManyToOne(fetch=FetchType.LAZY,optional=false)@JoinColumn(name="character_id",nullable=false)private Character character;@Enumerated(EnumType.STRING)@Column(name="decoration_type",nullable=false)private DecorationType decorationType;@Column(nullable=false)private boolean unlocked;private LocalDateTime unlockedAt;private LocalDateTime createdAt;private LocalDateTime updatedAt;
+	protected WorldDecoration(){}private WorldDecoration(Character character,DecorationType type,LocalDateTime now){this.character=character;this.decorationType=type;this.unlocked=true;this.unlockedAt=now;}public static WorldDecoration unlock(Character character,DecorationType type,LocalDateTime now){return new WorldDecoration(character,type,now);}@PrePersist void prePersist(){LocalDateTime now=LocalDateTime.now();createdAt=now;updatedAt=now;}@PreUpdate void preUpdate(){updatedAt=LocalDateTime.now();}
+	public Long getId(){return id;}public Character getCharacter(){return character;}public DecorationType getDecorationType(){return decorationType;}public boolean isUnlocked(){return unlocked;}public LocalDateTime getUnlockedAt(){return unlockedAt;}
+}

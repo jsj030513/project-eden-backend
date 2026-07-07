@@ -15,6 +15,8 @@ import com.projecteden.cheer.repository.CheerRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
 import com.projecteden.common.exception.ForbiddenOperationException;
 import com.projecteden.friend.service.FriendService;
+import com.projecteden.evolution.domain.EvolutionSourceType;
+import com.projecteden.evolution.service.EvolutionService;
 import com.projecteden.notification.domain.NotificationType;
 import com.projecteden.notification.service.NotificationService;
 import com.projecteden.user.domain.User;
@@ -31,6 +33,7 @@ public class CheerService {
 	private final CharacterRepository characterRepository;
 	private final NotificationService notificationService;
 	private final Clock clock;
+	private final EvolutionService evolutionService;
 
 	public CheerService(
 			CheerRepository cheerRepository,
@@ -38,13 +41,15 @@ public class CheerService {
 			FriendService friendService,
 			CharacterRepository characterRepository,
 			NotificationService notificationService,
-			Clock clock) {
+			Clock clock,
+			EvolutionService evolutionService) {
 		this.cheerRepository = cheerRepository;
 		this.userRepository = userRepository;
 		this.friendService = friendService;
 		this.characterRepository = characterRepository;
 		this.notificationService = notificationService;
 		this.clock = clock;
+		this.evolutionService = evolutionService;
 	}
 
 	@Transactional
@@ -67,6 +72,7 @@ public class CheerService {
 		Character character = characterRepository.findByUserId(receiver.getId())
 				.orElseThrow(() -> new ResourceNotFoundException("캐릭터를 찾을 수 없습니다."));
 		character.addExp(CHEER_EXPERIENCE);
+		evolutionService.addEvolutionPoint(character.getId(), EvolutionSourceType.CHEER);
 		notificationService.create(
 				receiver,
 				NotificationType.CHEER_RECEIVED,

@@ -40,6 +40,9 @@ import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
 import com.projecteden.world.domain.World;
 import com.projecteden.world.repository.WorldRepository;
+import com.projecteden.evolution.repository.WorldEvolutionRepository;
+import com.projecteden.evolution.repository.WorldDecorationRepository;
+import com.projecteden.evolution.repository.EvolutionHistoryRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -51,6 +54,10 @@ class RecognitionIntegrationTests {
 
 	@Autowired
 	private RecognitionRepository recognitionRepository;
+
+	@Autowired private EvolutionHistoryRepository evolutionHistoryRepository;
+	@Autowired private WorldDecorationRepository worldDecorationRepository;
+	@Autowired private WorldEvolutionRepository worldEvolutionRepository;
 
 	@Autowired
 	private PhotoRepository photoRepository;
@@ -203,6 +210,9 @@ class RecognitionIntegrationTests {
 	}
 
 	private void deleteTestData() {
+		evolutionHistoryRepository.deleteAll();
+		worldDecorationRepository.deleteAll();
+		worldEvolutionRepository.deleteAll();
 		recognitionRepository.deleteAll();
 		photoRepository.deleteAll();
 		plantRepository.deleteAll();

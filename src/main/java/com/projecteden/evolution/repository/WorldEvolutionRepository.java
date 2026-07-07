@@ -1,0 +1,1 @@
+package com.projecteden.evolution.repository;import java.util.Optional;import org.springframework.data.jpa.repository.JpaRepository;import com.projecteden.evolution.domain.WorldEvolution;public interface WorldEvolutionRepository extends JpaRepository<WorldEvolution,Long>{Optional<WorldEvolution> findByCharacterId(Long characterId);}

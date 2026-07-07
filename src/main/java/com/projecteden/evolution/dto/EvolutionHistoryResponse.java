@@ -1,0 +1,1 @@
+package com.projecteden.evolution.dto;import java.time.LocalDateTime;import com.projecteden.evolution.domain.EvolutionEventType;public record EvolutionHistoryResponse(EvolutionEventType eventType,String description,LocalDateTime createdAt){}

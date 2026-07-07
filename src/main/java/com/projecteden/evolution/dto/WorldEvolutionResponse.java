@@ -1,0 +1,1 @@
+package com.projecteden.evolution.dto;import com.projecteden.evolution.domain.WorldStage;public record WorldEvolutionResponse(int worldLevel,int evolutionPoint,WorldStage worldStage,int nextLevelPoint,double progressRate){}

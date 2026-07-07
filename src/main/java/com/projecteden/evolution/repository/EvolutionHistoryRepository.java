@@ -1,0 +1,1 @@
+package com.projecteden.evolution.repository;import java.util.List;import org.springframework.data.jpa.repository.JpaRepository;import com.projecteden.evolution.domain.EvolutionHistory;public interface EvolutionHistoryRepository extends JpaRepository<EvolutionHistory,Long>{List<EvolutionHistory> findByCharacterIdOrderByCreatedAtDesc(Long characterId);}

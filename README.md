@@ -807,3 +807,70 @@ Authorization: Bearer {accessToken}
 ```
 
 통계에는 총 발견 횟수, 도감 등록 종수, 달성 업적 수, 보유 칭호 수와 최근 발견 시각이 포함됩니다.
+
+## World Evolution API
+
+World Evolution은 Recognition, Resonance, Achievement, Cheer 활동을 월드 성장 포인트로 누적합니다.
+
+### Evolution Point 규칙
+
+| 활동 | EP |
+|---|---:|
+| RECOGNITION | +5 |
+| RESONANCE | +10 |
+| ACHIEVEMENT | +30 |
+| CHEER | +2 |
+
+### 레벨 및 스테이지 규칙
+
+| 누적 EP | 레벨 | 스테이지 |
+|---:|---:|---|
+| 0 | 1 | SEED |
+| 100 | 2 | SPROUT |
+| 250 | 3 | GARDEN |
+| 500 | 4 | FOREST |
+| 1000 | 5 | PARADISE |
+
+최대 레벨은 5입니다.
+
+### 장식 해금 규칙
+
+| 레벨 | 해금 장식 |
+|---:|---|
+| 2 | FLOWER_FIELD |
+| 3 | TREE |
+| 4 | BENCH, ROAD |
+| 5 | LAMP, FOUNTAIN, WINDMILL |
+
+장식은 한 번만 해금되며 중복 저장되지 않습니다.
+
+### 월드 성장 상태 조회
+
+```http
+GET /api/evolution/me
+Authorization: Bearer {accessToken}
+```
+
+```json
+{
+  "worldLevel": 3,
+  "evolutionPoint": 260,
+  "worldStage": "GARDEN",
+  "nextLevelPoint": 500,
+  "progressRate": 52.0
+}
+```
+
+### 성장 기록 및 장식 조회
+
+```http
+GET /api/evolution/history
+Authorization: Bearer {accessToken}
+```
+
+```http
+GET /api/evolution/decorations
+Authorization: Bearer {accessToken}
+```
+
+History에는 EP 획득, 레벨 상승, 스테이지 상승, 장식 해금처럼 실제 발생한 이벤트만 저장됩니다.

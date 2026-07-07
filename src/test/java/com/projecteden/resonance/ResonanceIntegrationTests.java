@@ -53,6 +53,9 @@ import com.projecteden.collection.repository.CollectionRepository;
 import com.projecteden.statistics.repository.CharacterStatisticsRepository;
 import com.projecteden.achievement.repository.UserAchievementRepository;
 import com.projecteden.title.repository.UserTitleRepository;
+import com.projecteden.evolution.repository.WorldEvolutionRepository;
+import com.projecteden.evolution.repository.WorldDecorationRepository;
+import com.projecteden.evolution.repository.EvolutionHistoryRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -64,6 +67,10 @@ class ResonanceIntegrationTests {
 
 	@Autowired
 	private ResonanceRepository resonanceRepository;
+
+	@Autowired private EvolutionHistoryRepository evolutionHistoryRepository;
+	@Autowired private WorldDecorationRepository worldDecorationRepository;
+	@Autowired private WorldEvolutionRepository worldEvolutionRepository;
 
 	@Autowired
 	private UserTitleRepository userTitleRepository;
@@ -301,6 +308,9 @@ class ResonanceIntegrationTests {
 	}
 
 	private void deleteTestData() {
+		evolutionHistoryRepository.deleteAll();
+		worldDecorationRepository.deleteAll();
+		worldEvolutionRepository.deleteAll();
 		userTitleRepository.deleteAll();
 		userAchievementRepository.deleteAll();
 		characterStatisticsRepository.deleteAll();
