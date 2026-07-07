@@ -951,3 +951,55 @@ Authorization: Bearer {accessToken}
 ```
 
 Village History는 `MEMORY_RECORDED`, `CHANGE_APPEARED`, `NPC_REACTION` 기록을 제공합니다. World Evolution이 활동의 성장 수치를 누적한다면, Living Village는 같은 순간이 마을의 풍경과 기억에 어떻게 머물렀는지를 기록합니다.
+
+## Memory Interpretation API
+
+> 마을은 당신을 판단하지 않습니다. 당신이 오래 바라본 것들을 천천히 닮아갑니다.
+
+Memory Interpretation은 Sprint 7의 `VillageMemory` 누적값을 사용자 유형이나 점수로 노출하지 않고, 현재 마을의 분위기와 결정적인 표현 문구로 변환합니다. Recognition이 성공해 기억이 기록되면 Interpretation Snapshot도 같은 흐름에서 갱신됩니다.
+
+### Village Theme
+
+| 중심 기억 | Theme |
+|---|---|
+| NATURE | BLOOMING_VILLAGE |
+| FOOD | WARM_VILLAGE |
+| WALK | WALKING_VILLAGE |
+| WATER | WATERSIDE_VILLAGE |
+| ANIMAL | ANIMAL_FRIENDLY_VILLAGE |
+| UNKNOWN | QUIET_VILLAGE |
+| 기억 없음 | UNDEFINED |
+
+`VillageThemeSnapshot`은 Character별로 하나만 저장되며 현재 Theme, 중심/보조 카테고리, 규칙 버전과 Theme 적용 시각을 보관합니다. 같은 Theme이 유지되면 `appliedAt`은 바뀌지 않습니다. 새로운 중심 카테고리의 기억 수가 기존 중심보다 3 이상 많거나 기존 Theme이 `UNDEFINED`인 경우에만 Theme이 전환되어, 짧은 변화로 분위기가 흔들리지 않습니다. 실제 Theme 전환만 `THEME_CHANGED` History로 기록합니다.
+
+### 현재 마을 해석 조회
+
+```http
+GET /api/village/interpretation
+Authorization: Bearer {accessToken}
+```
+
+```json
+{
+  "theme": "BLOOMING_VILLAGE",
+  "primaryCategory": "NATURE",
+  "secondaryCategory": "WALK",
+  "message": "이 마을은 꽃과 바람이 오래 머무는 곳이 되어가고 있습니다.",
+  "expressions": [
+    {
+      "type": "NPC_DIALOGUE",
+      "message": "꽃이 이 마을을 참 좋아하는 것 같네요.",
+      "hint": "flower"
+    },
+    {
+      "type": "SCENERY_HINT",
+      "message": "부드러운 꽃길이 마을에 더 오래 머뭅니다.",
+      "hint": "flower_path"
+    }
+  ],
+  "appliedAt": "2026-07-07T15:00:00",
+  "ruleVersion": "v1"
+}
+```
+
+Expression은 랜덤이나 외부 AI 없이 Theme별 규칙으로 항상 동일하게 생성됩니다. 실제 AI 분석, 사용자 심리 진단, NPC Memory, Memory Reflection 및 AI Story는 이 Sprint에 포함하지 않습니다.

@@ -46,6 +46,7 @@ import com.projecteden.evolution.repository.EvolutionHistoryRepository;
 import com.projecteden.village.repository.VillageMemoryRepository;
 import com.projecteden.village.repository.VillageChangeRepository;
 import com.projecteden.village.repository.VillageHistoryRepository;
+import com.projecteden.village.repository.VillageThemeSnapshotRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -64,6 +65,7 @@ class RecognitionIntegrationTests {
 	@Autowired private VillageHistoryRepository villageHistoryRepository;
 	@Autowired private VillageChangeRepository villageChangeRepository;
 	@Autowired private VillageMemoryRepository villageMemoryRepository;
+	@Autowired private VillageThemeSnapshotRepository villageThemeSnapshotRepository;
 
 	@Autowired
 	private PhotoRepository photoRepository;
@@ -121,6 +123,7 @@ class RecognitionIntegrationTests {
 				.andExpect(jsonPath("$.photoId").value(photo.getId()));
 
 		assertEquals(1, recognitionRepository.count());
+		assertEquals(1, villageThemeSnapshotRepository.count());
 	}
 
 	@Test
@@ -218,6 +221,7 @@ class RecognitionIntegrationTests {
 	private void deleteTestData() {
 		villageHistoryRepository.deleteAll();
 		villageChangeRepository.deleteAll();
+		villageThemeSnapshotRepository.deleteAll();
 		villageMemoryRepository.deleteAll();
 		evolutionHistoryRepository.deleteAll();
 		worldDecorationRepository.deleteAll();
