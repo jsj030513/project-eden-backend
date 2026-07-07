@@ -1,0 +1,1 @@
+package com.projecteden.village.dto;import java.util.List;import com.projecteden.village.domain.VillageCategory;public record VillageResponse(VillageCategory dominantCategory,long totalMemoryCount,List<VillageMemoryResponse> memories,List<VillageChangeResponse> changes,String latestMessage){}

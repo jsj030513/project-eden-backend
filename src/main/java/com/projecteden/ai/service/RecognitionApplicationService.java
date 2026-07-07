@@ -16,6 +16,7 @@ import com.projecteden.photo.domain.Photo;
 import com.projecteden.photo.repository.PhotoRepository;
 import com.projecteden.evolution.domain.EvolutionSourceType;
 import com.projecteden.evolution.service.EvolutionService;
+import com.projecteden.village.service.VillageService;
 
 @Service
 public class RecognitionApplicationService {
@@ -25,18 +26,21 @@ public class RecognitionApplicationService {
 	private final CharacterRepository characterRepository;
 	private final RecognitionService recognitionService;
 	private final EvolutionService evolutionService;
+	private final VillageService villageService;
 
 	public RecognitionApplicationService(
 			RecognitionRepository recognitionRepository,
 			PhotoRepository photoRepository,
 			CharacterRepository characterRepository,
 			RecognitionService recognitionService,
-			EvolutionService evolutionService) {
+			EvolutionService evolutionService,
+			VillageService villageService) {
 		this.recognitionRepository = recognitionRepository;
 		this.photoRepository = photoRepository;
 		this.characterRepository = characterRepository;
 		this.recognitionService = recognitionService;
 		this.evolutionService = evolutionService;
+		this.villageService = villageService;
 	}
 
 	@Transactional
@@ -72,6 +76,8 @@ public class RecognitionApplicationService {
 		if (recognition.isRecognized() && recognition.getRecognizedObject() != null) {
 			evolutionService.addEvolutionPoint(
 					photo.getCharacter().getId(), EvolutionSourceType.RECOGNITION);
+			villageService.recordVillageMemory(
+					photo.getCharacter().getId(), recognition.getRecognizedObject());
 		}
 
 		// TODO: 다중 객체 인식, 공명 계산 및 Reward 시스템과 연결한다.
