@@ -49,6 +49,10 @@ import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
 import com.projecteden.world.domain.World;
 import com.projecteden.world.repository.WorldRepository;
+import com.projecteden.collection.repository.CollectionRepository;
+import com.projecteden.statistics.repository.CharacterStatisticsRepository;
+import com.projecteden.achievement.repository.UserAchievementRepository;
+import com.projecteden.title.repository.UserTitleRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -60,6 +64,18 @@ class ResonanceIntegrationTests {
 
 	@Autowired
 	private ResonanceRepository resonanceRepository;
+
+	@Autowired
+	private UserTitleRepository userTitleRepository;
+
+	@Autowired
+	private UserAchievementRepository userAchievementRepository;
+
+	@Autowired
+	private CharacterStatisticsRepository characterStatisticsRepository;
+
+	@Autowired
+	private CollectionRepository collectionRepository;
 
 	@Autowired
 	private RecognitionRepository recognitionRepository;
@@ -285,6 +301,10 @@ class ResonanceIntegrationTests {
 	}
 
 	private void deleteTestData() {
+		userTitleRepository.deleteAll();
+		userAchievementRepository.deleteAll();
+		characterStatisticsRepository.deleteAll();
+		collectionRepository.deleteAll();
 		resonanceRepository.deleteAll();
 		recognitionRepository.deleteAll();
 		photoRepository.deleteAll();

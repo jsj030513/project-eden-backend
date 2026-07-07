@@ -1,0 +1,1 @@
+package com.projecteden.title.repository; import java.util.Optional; import org.springframework.data.jpa.repository.JpaRepository; import com.projecteden.title.domain.Title; public interface TitleRepository extends JpaRepository<Title,Long>{Optional<Title> findByCode(String code);}

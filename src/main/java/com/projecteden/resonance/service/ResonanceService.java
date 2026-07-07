@@ -13,6 +13,7 @@ import com.projecteden.ai.repository.RecognitionRepository;
 import com.projecteden.character.domain.Character;
 import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.common.exception.ResourceNotFoundException;
+import com.projecteden.collection.service.CollectionService;
 import com.projecteden.house.domain.House;
 import com.projecteden.house.repository.HouseRepository;
 import com.projecteden.inventory.domain.Inventory;
@@ -39,6 +40,7 @@ public class ResonanceService {
 	private final HouseRepository houseRepository;
 	private final InventoryRepository inventoryRepository;
 	private final SeedRepository seedRepository;
+	private final CollectionService collectionService;
 	private final Clock clock;
 
 	public ResonanceService(
@@ -49,6 +51,7 @@ public class ResonanceService {
 			HouseRepository houseRepository,
 			InventoryRepository inventoryRepository,
 			SeedRepository seedRepository,
+			CollectionService collectionService,
 			Clock clock) {
 		this.resonanceRepository = resonanceRepository;
 		this.recognitionRepository = recognitionRepository;
@@ -57,6 +60,7 @@ public class ResonanceService {
 		this.houseRepository = houseRepository;
 		this.inventoryRepository = inventoryRepository;
 		this.seedRepository = seedRepository;
+		this.collectionService = collectionService;
 		this.clock = clock;
 	}
 
@@ -89,6 +93,7 @@ public class ResonanceService {
 				reward.seedQuantity(),
 				reward.gold(),
 				today));
+		collectionService.registerDiscovery(characterId, recognition.getRecognizedObject());
 		return toResponse(resonance);
 	}
 

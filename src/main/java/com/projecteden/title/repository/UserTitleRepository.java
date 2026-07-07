@@ -1,0 +1,3 @@
+package com.projecteden.title.repository;
+import java.util.List; import java.util.Optional; import org.springframework.data.jpa.repository.JpaRepository; import com.projecteden.title.domain.UserTitle;
+public interface UserTitleRepository extends JpaRepository<UserTitle,Long>{boolean existsByCharacterIdAndTitleCode(Long characterId,String titleCode);long countByCharacterIdAndTitleCode(Long characterId,String titleCode);List<UserTitle> findByCharacterId(Long characterId);Optional<UserTitle> findByCharacterIdAndActiveTrue(Long characterId);Optional<UserTitle> findByCharacterIdAndTitleCode(Long characterId,String titleCode);long countByCharacterId(Long characterId);}

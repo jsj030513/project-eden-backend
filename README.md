@@ -725,3 +725,85 @@ GET /api/ranking/friends
 - `CHEER_RECEIVED`, `SEASON_CHANGE`, `FRIEND_ADDED` 알림을 지원합니다.
 - 프로필에서 닉네임, 아바타, 대표 섬과 대표 생물을 수정할 수 있습니다.
 - 랭킹은 친구와 본인만 대상으로 하며 전역 랭킹은 제공하지 않습니다.
+
+## Collection & Achievement API
+
+공명에 성공하면 Recognition 결과가 도감에 등록됩니다. 이미 등록된 대상은 발견 횟수와 최근 발견 시각이 갱신됩니다.
+
+### 내 도감 조회
+
+```http
+GET /api/collections/me
+Authorization: Bearer {accessToken}
+```
+
+```json
+{
+  "totalCollectableCount": 6,
+  "uniqueCollectedCount": 1,
+  "completionRate": 16.666666666666668,
+  "collections": [
+    {
+      "id": 1,
+      "recognizedObject": "FLOWER",
+      "rarity": "COMMON",
+      "discoveredCount": 2,
+      "firstDiscoveredAt": "2026-07-07T10:00:00",
+      "lastDiscoveredAt": "2026-07-07T11:00:00"
+    }
+  ]
+}
+```
+
+### 희귀도 규칙
+
+| 인식 대상 | 희귀도 |
+|---|---|
+| FLOWER, TOMATO, CARROT, POTATO, WHEAT | COMMON |
+| UNKNOWN | UNCOMMON |
+
+### 내 업적 조회
+
+```http
+GET /api/achievements/me
+Authorization: Bearer {accessToken}
+```
+
+| 업적 코드 | 조건 | 지급 칭호 |
+|---|---|---|
+| FIRST_DISCOVERY | 최초 발견 1회 | FIRST_OBSERVER |
+| COLLECTION_3 | 서로 다른 대상 3종 | SMALL_COLLECTOR |
+| TOTAL_DISCOVERY_10 | 총 발견 10회 | DAILY_OBSERVER |
+| SAME_OBJECT_5 | 같은 대상 5회 | FOCUSED_OBSERVER |
+
+업적은 조건 충족 시 자동 달성되며 같은 업적과 보상 칭호는 중복 지급되지 않습니다.
+
+### 칭호 조회 및 대표 칭호 설정
+
+```http
+GET /api/titles/me
+Authorization: Bearer {accessToken}
+```
+
+```http
+PUT /api/titles/me/active
+Authorization: Bearer {accessToken}
+Content-Type: application/json
+```
+
+```json
+{
+  "titleCode": "SMALL_COLLECTOR"
+}
+```
+
+보유한 칭호만 대표 칭호로 설정할 수 있으며 대표 칭호는 한 개만 활성화됩니다.
+
+### 내 통계 조회
+
+```http
+GET /api/statistics/me
+Authorization: Bearer {accessToken}
+```
+
+통계에는 총 발견 횟수, 도감 등록 종수, 달성 업적 수, 보유 칭호 수와 최근 발견 시각이 포함됩니다.

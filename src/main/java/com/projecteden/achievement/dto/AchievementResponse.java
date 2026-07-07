@@ -1,0 +1,1 @@
+package com.projecteden.achievement.dto; import java.time.LocalDateTime; import com.projecteden.achievement.domain.AchievementType; public record AchievementResponse(String code,String name,String description,AchievementType type,int requiredValue,boolean achieved,LocalDateTime achievedAt,String rewardTitleCode){}

@@ -1,0 +1,13 @@
+package com.projecteden.statistics.service;
+
+import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
+import com.projecteden.achievement.repository.UserAchievementRepository; import com.projecteden.character.domain.Character; import com.projecteden.character.repository.CharacterRepository; import com.projecteden.collection.repository.CollectionRepository; import com.projecteden.common.exception.ResourceNotFoundException; import com.projecteden.statistics.domain.CharacterStatistics; import com.projecteden.statistics.dto.StatisticsResponse; import com.projecteden.statistics.repository.CharacterStatisticsRepository; import com.projecteden.title.repository.UserTitleRepository;
+@Service public class StatisticsService{
+	private final CharacterStatisticsRepository statistics;private final CharacterRepository characters;private final CollectionRepository collections;private final UserAchievementRepository achievements;private final UserTitleRepository titles;
+	public StatisticsService(CharacterStatisticsRepository statistics,CharacterRepository characters,CollectionRepository collections,UserAchievementRepository achievements,UserTitleRepository titles){this.statistics=statistics;this.characters=characters;this.collections=collections;this.achievements=achievements;this.titles=titles;}
+	@Transactional public CharacterStatistics getOrCreate(Long characterId){return statistics.findByCharacterId(characterId).orElseGet(()->statistics.save(CharacterStatistics.create(character(characterId))));}
+	@Transactional public CharacterStatistics refreshStatistics(Long characterId){CharacterStatistics value=getOrCreate(characterId);value.refresh(collections.sumDiscoveredCountByCharacterId(characterId),collections.countByCharacterId(characterId),achievements.countByCharacterId(characterId),titles.countByCharacterId(characterId),collections.findTopByCharacterIdOrderByLastDiscoveredAtDesc(characterId).map(c->c.getLastDiscoveredAt()).orElse(null));return value;}
+	@Transactional public StatisticsResponse getMyStatistics(Long userId){Character c=characters.findByUserId(userId).orElseThrow(()->new ResourceNotFoundException("캐릭터를 찾을 수 없습니다."));return response(refreshStatistics(c.getId()));}
+	private Character character(Long id){return characters.findById(id).orElseThrow(()->new ResourceNotFoundException("캐릭터를 찾을 수 없습니다."));}
+	private StatisticsResponse response(CharacterStatistics s){return new StatisticsResponse(s.getTotalDiscoveries(),s.getUniqueCollections(),s.getTotalAchievements(),s.getTotalTitles(),s.getLastDiscoveryAt());}
+}
