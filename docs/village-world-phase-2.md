@@ -57,3 +57,24 @@ The final backend run completed with 492 tests, 0 failures, 0 errors, and 4 opt-
 ## Final 2차-A evidence decision
 
 Second-bootstrap, fresh runtime, existing-chain preservation, server-reject, actual key-hold, CTA network, touch joystick, responsive panel, and fresh regression evidence are complete. Village MVP Polish 2차-A is complete. Physical iPhone Safari remains outside this acceptance evidence and is not represented as tested.
+
+## Village MVP Polish 2차-B1 interaction contract
+
+The backend now exposes one additive contextual interaction type, `INTERACT`, alongside the existing `TALK` and `INSPECT` values. A contextual response retains the existing target fields and adds a stable `category` and `actionLabel`. The server resolves candidate priority as `TALK > INTERACT > INSPECT`; equal-priority candidates are ordered by tile `y`, tile `x`, target asset type, and target id. If multiple candidates occupy one tile, the target asset type and id provide the deterministic tie-break. Only one response is emitted for each adjacent tile.
+
+The contextual asset contract is:
+
+- `FARM`: `FARM_PLOT_EMPTY`
+- `CROP`: `FARM_CARROT`, `FARM_FLOWER`, `FARM_VEGETABLE`, `FARM_TOMATO`, `FARM_CABBAGE`
+- `ANIMAL`: `DEFAULT_DOG`, `DEFAULT_CAT`, `DEFAULT_BIRD`
+- `COMMUNITY`: `COMMUNITY_HOUSE`
+
+`PLAZA`, `BUSH`, generic decoration assets, and legacy memory assets continue to use the ordinary `INSPECT` contract. Default NPCs continue to use `TALK`; when an NPC and contextual object share a tile, only the NPC `TALK` response is returned.
+
+Interaction range remains the four cardinal tiles exactly one step from the persisted player position. The current tile, diagonal tiles, distance-two tiles, and out-of-bounds coordinates are excluded. Candidate objects are obtained only from world changes owned by the authenticated user's character, preserving user isolation. Missing candidates serialize as an empty array rather than `null`, and repeated template bootstrap does not duplicate targets or interaction rows.
+
+`WorldTileInteractionIntegrationTests` covers the empty farm, every supported crop asset, every default animal type, the community house, TALK priority, deterministic repeated ordering, user isolation, idempotent bootstrap, duplicate prevention, range, and JSON serialization of contextual metadata.
+
+The 2-B1 validation run completed the targeted interaction suite with 15 tests and the full backend regression with 501 tests, 0 failures, 0 errors, and 4 existing opt-in skips. `./mvnw package` and `git diff --check` passed. A fresh local-profile process on port 18093 connected to PostgreSQL 16.14, validated all nine recorded Flyway entries through schema version 8, initialized Hibernate, and started Tomcat. An authenticated `GET /api/worlds/me/state` returned HTTP 200 with the persisted empty-farm payload: `type=INTERACT`, `targetId=16`, `targetAssetType=FARM_PLOT_EMPTY`, `category=FARM`, `displayName=비어 있는 밭`, and `actionLabel=살펴보기`. The fixture player position was restored to its original coordinate after this verification.
+
+This step does not implement contextual action execution, planting persistence, dialogue progression, or frontend rendering. Village MVP Polish 2차-B2 frontend contextual interaction remains unimplemented.
