@@ -7,19 +7,32 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 
 import com.projecteden.user.domain.User;
 import com.projecteden.world.dto.CreateWorldResponse;
 import com.projecteden.world.service.WorldService;
+import com.projecteden.world.ecology.WorldEcologyService;
+import com.projecteden.world.ecology.WorldStateResponse;
+import com.projecteden.world.ecology.MoveRequest;
+import com.projecteden.world.ecology.MoveResponse;
+import com.projecteden.world.ecology.PlantMemoryRequest;
+import com.projecteden.world.ecology.PlantMemoryResponse;
+import com.projecteden.world.ecology.WorldPlantingService;
 
 @RestController
 @RequestMapping("/api/worlds")
 public class WorldController {
 
 	private final WorldService worldService;
+	private final WorldEcologyService worldEcologyService;
+	private final WorldPlantingService worldPlantingService;
 
-	public WorldController(WorldService worldService) {
+	public WorldController(WorldService worldService, WorldEcologyService worldEcologyService, WorldPlantingService worldPlantingService) {
 		this.worldService = worldService;
+		this.worldEcologyService = worldEcologyService;
+		this.worldPlantingService = worldPlantingService;
 	}
 
 	@PostMapping
@@ -31,5 +44,18 @@ public class WorldController {
 	@GetMapping("/me")
 	public ResponseEntity<CreateWorldResponse> getMyWorld(@AuthenticationPrincipal User user) {
 		return ResponseEntity.ok(worldService.getMyWorld(user.getId()));
+	}
+
+	@GetMapping("/me/state")
+	public ResponseEntity<WorldStateResponse> getMyWorldState(@AuthenticationPrincipal User user) {
+		return ResponseEntity.ok(worldEcologyService.stateForUser(user.getId()));
+	}
+	@PostMapping("/me/move") public ResponseEntity<MoveResponse> move(@AuthenticationPrincipal User user,@RequestBody MoveRequest request){return ResponseEntity.ok(worldEcologyService.move(user.getId(),request));}
+
+	@PostMapping("/me/plant-memory")
+	public ResponseEntity<PlantMemoryResponse> plantMemory(
+			@AuthenticationPrincipal User user,
+			@Valid @RequestBody PlantMemoryRequest request) {
+		return ResponseEntity.ok(worldPlantingService.plant(user.getId(), request));
 	}
 }

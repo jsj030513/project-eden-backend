@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,13 @@ public class WorldEcologyService {
         var position=position(character);
         Long characterId=character.getId();
         var worldChanges=changes.findByCharacterIdOrderByIdAsc(characterId);
+        Set<Long> replacedObjectIds = worldChanges.stream()
+                .map(WorldChange::getTargetObject)
+                .filter(java.util.Objects::nonNull)
+                .map(WorldPlacedObject::getId)
+                .collect(Collectors.toSet());
         var placed = worldChanges.stream().flatMap(c->objects.findByWorldChangeId(c.getId()).stream()
+                .filter(object -> !replacedObjectIds.contains(object.getId()))
                 .map(o->new PlacedObjectResponse(o.getId(),o.getAssetType(),c.getWorldCategory(),o.getPositionX(),o.getPositionY(),o.getTerrain(),o.getHabitat(),c.getId(),o.getPositionY(),0))).toList();
         Map<String, List<PlacedObjectResponse>> npcByTile = placed.stream()
                 .filter(object -> isTemplateNpc(object.assetType()))
@@ -64,7 +71,7 @@ public class WorldEcologyService {
         return new WorldStateResponse(worldChanges.stream().map(this::result).toList(),terrain.findByCharacterIdOrderByYAscXAsc(characterId).stream().map(t->new TerrainTileResponse(t.getX(),t.getY(),t.getTerrainType(),t.isWalkable())).toList(),placed,new MapBoundsResponse(MIN_X,MAX_X,MIN_Y,MAX_Y),new PlayerPositionResponse(position.getX(),position.getY()),interactions,npcPositions,List.of(),List.of(),"LIVING_VILLAGE",character.getName()+"의 마을");
     }
     @Transactional public MoveResponse move(Long userId,MoveRequest request){ var character=characters.findByUserId(userId).orElseThrow(()->new ResourceNotFoundException("캐릭터를 찾을 수 없습니다.")); bootstrap(character); var current=position(character); if(Math.abs(request.targetX()-current.getX())+Math.abs(request.targetY()-current.getY())>1)return new MoveResponse(false,current.getX(),current.getY(),null,"MOVE_TOO_FAR"); if(request.targetX()<MIN_X||request.targetX()>MAX_X||request.targetY()<MIN_Y||request.targetY()>MAX_Y)return new MoveResponse(false,current.getX(),current.getY(),null,"OUT_OF_BOUNDS"); var tile=terrain.findByCharacterIdAndXAndY(character.getId(),request.targetX(),request.targetY()).orElseThrow(); if(!tile.isWalkable())return new MoveResponse(false,current.getX(),current.getY(),tile.getTerrainType(),"TERRAIN_BLOCKED"); current.moveTo(request.targetX(),request.targetY()); return new MoveResponse(true,current.getX(),current.getY(),tile.getTerrainType(),"OK"); }
-    private WorldPlayerPosition position(com.projecteden.character.domain.Character c){return positions.findByCharacterId(c.getId()).orElseGet(()->positions.save(WorldPlayerPosition.create(c,11,8)));}
+    WorldPlayerPosition position(com.projecteden.character.domain.Character c){return positions.findByCharacterId(c.getId()).orElseGet(()->positions.save(WorldPlayerPosition.create(c,11,8)));}
     private void bootstrap(com.projecteden.character.domain.Character character){ if(!terrain.existsByCharacterId(character.getId())) for(int y=MIN_Y;y<=MAX_Y;y++)for(int x=MIN_X;x<=MAX_X;x++){ TerrainType type=(x==11||y==7)?TerrainType.ROAD:TerrainType.GRASS; if(x<2||x>21||y<2||y>13)type=TerrainType.FOREST; if(x>=17&&y>=11)type=TerrainType.WATER; if(x>=13&&x<=15&&y>=3&&y<=5)type=TerrainType.BUILDING; terrain.save(WorldTerrainTile.create(character,x,y,type)); } seedTemplate(character); }
     private void seedTemplate(com.projecteden.character.domain.Character character) {
         var world = worlds.findByCharacterId(character.getId()).orElse(null);
@@ -135,7 +142,20 @@ public class WorldEcologyService {
         List<Long> ids = java.util.stream.IntStream.range(0,count).mapToObj(i -> objects.save(WorldPlacedObject.create(change, mapping.asset, mapping.terrain, mapping.habitat, x + (i * 12), y + (i % 2) * 10)).getId()).toList();
         return new WorldChangeResult(change.getId(), mapping.category, mapping.asset, mapping.key, mapping.message, ids, true, x, y);
     }
-    private WorldChangeResult result(WorldChange change) { return new WorldChangeResult(change.getId(),change.getWorldCategory(),change.getAssetType(),change.getMessageKey(),change.getDisplayMessage(),objects.findByWorldChangeId(change.getId()).stream().map(WorldPlacedObject::getId).toList(),true,change.getFocusX(),change.getFocusY()); }
+    WorldChangeResult createTargeted(Recognition recognition, WorldPlacedObject target, WorldAssetType cropAsset) {
+        WorldCategory category = cropAsset == WorldAssetType.FARM_FLOWER ? WorldCategory.NATURE : WorldCategory.FOOD;
+        String message = cropAsset == WorldAssetType.FARM_FLOWER
+                ? "이 기억이 빈 밭에 꽃으로 피어났습니다."
+                : "이 기억이 빈 밭에 새로운 작물로 자라났습니다.";
+        WorldChange change = changes.saveAndFlush(WorldChange.targeted(
+                recognition.getPhoto().getCharacter(), recognition, target, category, cropAsset,
+                "TARGETED_PLANTING", message, target.getPositionX(), target.getPositionY()));
+        objects.saveAndFlush(WorldPlacedObject.create(
+                change, cropAsset, TerrainType.SOIL, HabitatType.DECORATION_ONLY,
+                target.getPositionX(), target.getPositionY()));
+        return result(change);
+    }
+    WorldChangeResult result(WorldChange change) { return new WorldChangeResult(change.getId(),change.getWorldCategory(),change.getAssetType(),change.getMessageKey(),change.getDisplayMessage(),objects.findByWorldChangeId(change.getId()).stream().map(WorldPlacedObject::getId).toList(),true,change.getFocusX(),change.getFocusY()); }
     private Mapping mappingFor(RecognizedObject object) {
         if (object == null || object == RecognizedObject.UNKNOWN) return new Mapping(WorldCategory.UNKNOWN,WorldAssetType.MEMORY_SPARK,TerrainType.GRASS,HabitatType.DECORATION_ONLY,"MEMORY","특별한 기억이 마을 어딘가에 작은 변화를 남겼습니다.");
         return switch(object) { case FLOWER, PLANT -> new Mapping(WorldCategory.NATURE,WorldAssetType.FLOWER_CLUSTER,TerrainType.FLOWER_FIELD,HabitatType.DECORATION_ONLY,"FLOWER","이 기억은 마을의 새로운 풍경이 되었습니다."); case TREE -> new Mapping(WorldCategory.NATURE,WorldAssetType.TREE_GROVE,TerrainType.FOREST,HabitatType.DECORATION_ONLY,"TREE","오래 머물 그늘이 마을에 생겼습니다."); case CAT,DOG,ANIMAL -> new Mapping(WorldCategory.ANIMAL,WorldAssetType.VISITOR,TerrainType.GRASS,HabitatType.LAND,"LAND_ANIMAL","새로운 손님이 마을을 찾아왔습니다."); case WATER,RIVER,SEA,POND -> new Mapping(WorldCategory.WATER,WorldAssetType.POND,TerrainType.WATER,HabitatType.DECORATION_ONLY,"WATER","물가에 새로운 친구가 찾아왔습니다."); case FOOD,BREAD,FRUIT,VEGETABLE,TOMATO,CARROT,POTATO,WHEAT,COFFEE -> new Mapping(WorldCategory.FOOD,WorldAssetType.BAKERY_DETAIL,TerrainType.GRASS,HabitatType.DECORATION_ONLY,"FOOD","마을에 맛있는 향기가 퍼졌습니다."); case SKY,LANDSCAPE -> new Mapping(WorldCategory.SKY,WorldAssetType.ATMOSPHERE,TerrainType.GRASS,HabitatType.DECORATION_ONLY,"SKY","오늘의 하늘이 마을에 스며들었습니다."); default -> new Mapping(WorldCategory.MEMORY,WorldAssetType.MEMORY_SPARK,TerrainType.GRASS,HabitatType.DECORATION_ONLY,"MEMORY","특별한 기억이 마을 어딘가에 작은 변화를 남겼습니다."); };
