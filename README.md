@@ -2,15 +2,57 @@
 
 Project Eden의 Spring Boot 백엔드 애플리케이션입니다.
 
+## 요구 환경
+
+- Java 21
+- PostgreSQL 16
+- Docker Compose (선택)
+
 ## 실행 방법
 
-프로젝트 루트에서 다음 명령을 실행합니다.
+### 로컬 실행
+
+로컬에서 Spring Boot를 직접 실행할 때는 `local` profile을 사용합니다.
+PostgreSQL은 로컬 `localhost:5432`에서 실행 중이어야 합니다.
+
+```bash
+cp .env.example .env.local
+# .env.local의 password와 JWT secret을 안전한 로컬 값으로 교체합니다.
+set -a
+source .env.local
+set +a
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+`local` profile의 기본 datasource는 다음 값을 사용합니다.
+
+```text
+jdbc:postgresql://localhost:5432/project_eden
+```
+
+`SPRING_DATASOURCE_PASSWORD`와 `JWT_SECRET`은 필수 환경변수입니다. 실제 secret은 커밋하지 말고 `.env.example`을 참고해 `.env.local` 등 Git에서 제외된 로컬 파일로 관리합니다.
+
+Frontend 연동 시 허용 Origin은 `CORS_ALLOWED_ORIGINS`로 지정할 수 있습니다.
+
+```env
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+### Docker 실행
+
+Docker Compose로 실행할 때는 `docker` profile을 사용합니다. Compose 내부에서는 PostgreSQL 컨테이너 이름인 `postgres`를 datasource host로 사용합니다.
 
 ```bash
 docker compose up --build
 ```
 
-환경값을 변경하려면 `.env.example`을 참고하여 `.env` 파일을 생성합니다.
+명시적으로 profile을 지정하려면 다음 환경변수를 사용합니다.
+
+```bash
+SPRING_PROFILES_ACTIVE=docker docker compose up --build
+```
+
+환경값을 변경하려면 `.env.example`을 참고하여 `.env` 파일을 생성합니다. Compose 실행 전 `POSTGRES_PASSWORD`와 `JWT_SECRET`을 반드시 안전한 값으로 설정합니다.
 
 ## Health Check
 
@@ -106,7 +148,7 @@ Authorization: Bearer jwt-token
 }
 ```
 
-> `JWT_SECRET`은 로컬 개발 기본값만 제공됩니다. 운영 환경에서는 반드시 충분히 긴 비밀값을 환경변수로 관리해야 합니다.
+> `JWT_SECRET`에는 기본값이 없습니다. 로컬과 운영 환경 모두 충분히 긴 비밀값을 환경변수로 관리해야 합니다.
 
 ## Character API
 
@@ -524,9 +566,11 @@ Authorization: Bearer {accessToken}
 
 ## Photo API
 
-사진 파일 자체는 저장하지 않으며, 파일 메타데이터와 UUID 기반 Mock URL만 DB에 기록합니다.
+사진 파일은 `EDEN_PHOTO_STORAGE_ROOT`가 가리키는 로컬 파일시스템에 저장되며, DB에는 UUID 기반 상대 URL과 메타데이터를 기록합니다. 기본 저장 루트는 사용자 홈 아래 `.project-eden/uploads/photos`이며 저장 경로는 환경변수로 변경할 수 있습니다.
+업로드 가능한 파일 크기는 파일당 최대 `15MB`, multipart 요청 전체 최대 `20MB`입니다.
+제한을 초과하면 `413 Payload Too Large`와 함께 사용자 친화적인 오류 메시지를 반환합니다.
 
-### Plant 사진 업로드
+### 사진 업로드
 
 ```http
 POST /api/photos
@@ -538,8 +582,20 @@ Multipart 파라미터:
 
 | 이름 | 타입 | 설명 |
 |---|---|---|
-| `plantId` | Long | 사진을 연결할 Plant ID |
-| `file` | File | 업로드할 사진 |
+| `file` | File | 업로드할 사진, 필수 |
+| `plantId` | Long | 사진을 연결할 Plant ID, 선택 |
+
+`plantId`가 없으면 현실의 순간을 기록하는 일반 기억 사진으로 저장됩니다. `plantId`가 있으면 기존 식물 성장 흐름과 연결되며, 본인 소유의 `BLOOMED` Plant에만 업로드할 수 있습니다.
+
+일반 사진 업로드:
+
+```bash
+curl -X POST http://localhost:8080/api/photos \
+  -H "Authorization: Bearer {accessToken}" \
+  -F "file=@cat.jpg"
+```
+
+식물 사진 업로드:
 
 ```bash
 curl -X POST http://localhost:8080/api/photos \
@@ -550,14 +606,12 @@ curl -X POST http://localhost:8080/api/photos \
 
 ```json
 {
-  "id": 1,
-  "plantId": 1,
+  "photoId": 1,
+  "plantId": null,
   "imageUrl": "/uploads/photos/9b8c1b5e-0000-0000-0000-000000000000.jpg",
   "uploadedAt": "2026-07-06T16:30:00"
 }
 ```
-
-본인 소유의 `BLOOMED` Plant에만 사진을 업로드할 수 있습니다.
 
 ### 내 사진 조회
 
@@ -566,11 +620,11 @@ GET /api/photos/me
 Authorization: Bearer {accessToken}
 ```
 
-실제 파일 저장소, S3, 공명 및 보상 연동은 아직 구현하지 않았습니다.
+일반 사진과 식물 사진 모두 Recognition에 사용할 수 있습니다. 현재 저장소는 로컬 파일시스템이며 S3 연동은 제공하지 않습니다.
 
 ## AI Recognition API
 
-현재 Recognition은 외부 AI API를 호출하지 않고 `MockRecognitionService`를 사용합니다.
+Recognition의 이미지 관찰 provider는 `EDEN_IMAGE_OBSERVATION_PROVIDER`로 선택합니다. 기본값 `mock`은 외부 호출 없이 `originalFileName` 키워드로 deterministic 결과를 만듭니다. `local`은 Vision runtime과 검증된 ONNX model을 명시적으로 활성화한 경우에만 사용하며, `openai`는 API key와 model을 명시적으로 설정한 선택 경로입니다.
 
 ### 사진 인식
 
@@ -584,12 +638,27 @@ Authorization: Bearer {accessToken}
   "id": 1,
   "photoId": 1,
   "recognizedObject": "FLOWER",
+  "category": "NATURE",
   "confidence": 95,
-  "recognized": true
+  "recognized": true,
+  "fallback": false
 }
 ```
 
 동일한 사진에 인식 결과가 이미 존재하면 새로 생성하지 않고 기존 결과를 반환합니다.
+키워드가 없는 사진은 서버 오류가 아니라 `UNKNOWN` fallback 결과로 처리됩니다.
+
+```json
+{
+  "id": 2,
+  "photoId": 2,
+  "recognizedObject": "UNKNOWN",
+  "category": "UNKNOWN",
+  "confidence": 0,
+  "recognized": false,
+  "fallback": true
+}
+```
 
 ### 내 인식 결과 조회
 
@@ -598,8 +667,36 @@ GET /api/photos/recognitions
 Authorization: Bearer {accessToken}
 ```
 
-Mock AI는 이미지 URL이나 파일 내용을 분석하지 않고 항상 `FLOWER`, 신뢰도 `95`, 인식 성공을 반환합니다.
-Gemini, OpenAI Vision과 다중 객체 인식은 아직 구현하지 않았습니다.
+Mock AI는 이미지 URL이나 파일 내용을 분석하지 않습니다.
+현재 키워드 예시는 다음과 같습니다.
+
+| 파일명 키워드 | RecognizedObject | VillageCategory |
+|---|---|---|
+| cat, kitten, neko | CAT | ANIMAL |
+| dog, puppy | DOG | ANIMAL |
+| flower, rose, tulip | FLOWER | NATURE |
+| tree, forest, sky, landscape | TREE/SKY/LANDSCAPE | NATURE |
+| food, bread, cake, fruit | FOOD/BREAD/FRUIT | FOOD |
+| water, river, sea, pond | WATER/RIVER/SEA/POND | WATER |
+| road, path, park, street | ROAD/PATH/PARK/STREET | WALK |
+| study, book, reading, lecture, library, 필기, 공부, 독서 | STUDY/BOOK/READING/LECTURE/LIBRARY | STUDY |
+| code, coding, programming, laptop, computer, desk, office, meeting, project, 코딩, 개발 | CODING/PROGRAMMING/LAPTOP/COMPUTER/DESK/OFFICE/MEETING/WORKSPACE | WORK |
+| 키워드 없음 | UNKNOWN | UNKNOWN |
+
+Local Vision과 OpenAI provider는 선택 기능이며 기본 실행에서는 비활성입니다. 모델 파일이나 API key가 repository에 포함되지는 않습니다.
+
+## Dataset 및 Evaluation
+
+Filesystem Dataset Manager, collection, benchmark orchestration, image evaluation은 모두 opt-in입니다. 기본값은 비활성이며 다음 환경변수로 필요한 기능만 명시적으로 켭니다.
+
+```env
+EDEN_DATASET_ENABLED=false
+EDEN_DATASET_COLLECTION_ENABLED=false
+EDEN_BENCHMARK_ORCHESTRATION_ENABLED=false
+EDEN_IMAGE_EVALUATION_ENABLED=false
+```
+
+Dataset root, evaluation manifest/output 및 model 경로에는 로컬 전용 경로를 사용하고 실제 dataset, 사진, model binary, 평가 산출물은 Git에 추가하지 않습니다.
 
 ## Resonance API
 
@@ -885,11 +982,16 @@ Living Village는 오늘의 순간을 카테고리별 기억으로 남기고, �
 
 | Recognition 결과 | VillageCategory |
 |---|---|
-| FLOWER | NATURE |
-| TOMATO, CARROT, POTATO, WHEAT | FOOD |
+| FLOWER, TREE, PLANT, SKY, LANDSCAPE | NATURE |
+| CAT, DOG, BIRD, ANIMAL | ANIMAL |
+| FOOD, BREAD, FRUIT, VEGETABLE, TOMATO, CARROT, POTATO, WHEAT | FOOD |
+| WATER, RIVER, SEA, POND | WATER |
+| ROAD, PATH, PARK, STREET | WALK |
+| BOOK, NOTEBOOK, STUDY, READING, LECTURE, WRITING, LIBRARY | STUDY |
+| LAPTOP, COMPUTER, CODING, PROGRAMMING, DESK, OFFICE, MEETING, WORKSPACE | WORK |
 | UNKNOWN | UNKNOWN |
 
-`WALK`, `WATER`, `ANIMAL`은 향후 Recognition 대상 확장을 위해 준비되어 있습니다.
+UNKNOWN은 서버 오류가 아니며, 이름 붙이지 못한 기억으로 마을에 조용히 기록됩니다.
 
 ### Village Memory와 Change
 
@@ -967,6 +1069,8 @@ Memory Interpretation은 Sprint 7의 `VillageMemory` 누적값을 사용자 유�
 | WALK | WALKING_VILLAGE |
 | WATER | WATERSIDE_VILLAGE |
 | ANIMAL | ANIMAL_FRIENDLY_VILLAGE |
+| STUDY | QUIET_VILLAGE |
+| WORK | WARM_VILLAGE |
 | UNKNOWN | QUIET_VILLAGE |
 | 기억 없음 | UNDEFINED |
 

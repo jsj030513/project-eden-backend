@@ -34,9 +34,9 @@ A second real `GET /api/worlds/me/state` bootstrap request left all retained val
 
 ## Fresh runtime evidence
 
-The evidence run restarted the backend from `/Users/jangseongju/Project_Eden/project-eden-backend 3` as PID 58233 on port 8080, with the `local` Spring profile and PostgreSQL database `project_eden` at `jdbc:postgresql://localhost:5432/project_eden`. Flyway applied V8 and Hibernate/Tomcat started successfully.
+The evidence run restarted the backend from the backend repository root on port 8080, with the `local` Spring profile and PostgreSQL database `project_eden` at `jdbc:postgresql://localhost:5432/project_eden`. Flyway applied V8 and Hibernate/Tomcat started successfully. Host-specific paths and process IDs are intentionally omitted.
 
-The frontend was restarted from `/Users/jangseongju/Project_Eden/project-eden-frontend` as PID 63629 on `127.0.0.1:5173`; it used the local backend at `http://localhost:8080`.
+The frontend was restarted from the frontend repository root on `127.0.0.1:5173`; it used the local backend at `http://localhost:8080`.
 
 ## Browser Village E2E
 
