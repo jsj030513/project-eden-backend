@@ -14,3 +14,7 @@ spring:
 
 jwt:
   secret: project-eden-test-only-secret-key-with-at-least-32-bytes
+
+eden:
+  photo-storage:
+    root: ${java.io.tmpdir}/project-eden-test-photos

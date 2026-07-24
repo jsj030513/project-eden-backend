@@ -30,10 +30,10 @@ public class PhotoController {
 	@PostMapping
 	public ResponseEntity<PhotoUploadResponse> uploadPhoto(
 			@AuthenticationPrincipal User user,
-			@RequestParam("plantId") Long plantId,
+			@RequestParam(value = "plantId", required = false) Long plantId,
 			@RequestParam("file") MultipartFile file) {
 		PhotoUploadResponse response = photoService.uploadPhoto(user.getId(), plantId, file);
-		return ResponseEntity.created(URI.create("/api/photos/" + response.id())).body(response);
+		return ResponseEntity.created(URI.create("/api/photos/" + response.photoId())).body(response);
 	}
 
 	@GetMapping("/me")

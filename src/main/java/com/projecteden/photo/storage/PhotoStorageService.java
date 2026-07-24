@@ -25,17 +25,33 @@ public class PhotoStorageService {
 	}
 
 	public void store(String storedFileName, MultipartFile file) {
+		try {
+			store(storedFileName, file.getBytes());
+		} catch (IOException exception) {
+			throw new IllegalStateException("사진 파일을 읽을 수 없습니다.", exception);
+		}
+	}
+
+	public void store(String storedFileName, byte[] bytes) {
 		Path target = resolve(storedFileName);
 		Path root = storageRoot();
 		Path temporary = root.resolve("." + storedFileName + "." + UUID.randomUUID() + ".tmp");
 
 		try {
 			Files.createDirectories(root);
-			Files.copy(file.getInputStream(), temporary, StandardCopyOption.REPLACE_EXISTING);
+			Files.write(temporary, bytes, StandardOpenOption.CREATE_NEW);
 			moveAtomically(temporary, target);
 		} catch (IOException exception) {
 			deleteQuietly(temporary);
 			throw new IllegalStateException("사진 파일을 저장할 수 없습니다.", exception);
+		}
+	}
+
+	public void delete(String storedFileName) {
+		try {
+			Files.deleteIfExists(resolve(storedFileName));
+		} catch (IOException exception) {
+			throw new IllegalStateException("사진 파일을 삭제할 수 없습니다.", exception);
 		}
 	}
 

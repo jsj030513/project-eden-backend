@@ -8,6 +8,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -62,5 +63,12 @@ public class GlobalExceptionHandler {
 			DataIntegrityViolationException exception) {
 		return ResponseEntity.status(HttpStatus.CONFLICT)
 				.body(Map.of("message", "이미 존재하거나 사용할 수 없는 값입니다."));
+	}
+
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	public ResponseEntity<Map<String, String>> handleMaxUploadSizeExceededException(
+			MaxUploadSizeExceededException exception) {
+		return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+				.body(Map.of("message", "사진의 크기가 너무 큽니다. 조금 더 작은 사진으로 다시 시도해 주세요."));
 	}
 }

@@ -3,11 +3,16 @@ package com.projecteden.ai;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.util.UUID;
+
+import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -127,6 +133,91 @@ class RecognitionIntegrationTests {
 	}
 
 	@Test
+	void generalPhotoWithoutPlantCanBeRecognizedAndRecordedAsVillageMemory() throws Exception {
+		Photo generalPhoto = createPhoto(character, null);
+
+		performRecognize(generalPhoto.getId(), accessToken)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.photoId").value(generalPhoto.getId()))
+				.andExpect(jsonPath("$.recognizedObject").value("FLOWER"))
+				.andExpect(jsonPath("$.category").value("NATURE"))
+				.andExpect(jsonPath("$.fallback").value(false));
+
+		assertEquals(1, villageMemoryRepository.count());
+		assertEquals(1, villageThemeSnapshotRepository.count());
+	}
+
+	@Test
+	void mockRecognitionMapsCatPhotoToAnimal() throws Exception {
+		assertMockRecognition("my-cat.jpg", "CAT", "ANIMAL", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsFlowerPhotoToNature() throws Exception {
+		assertMockRecognition("rose-flower.jpg", "FLOWER", "NATURE", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsBreadPhotoToFood() throws Exception {
+		assertMockRecognition("warm-bread.jpg", "BREAD", "FOOD", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsRiverPhotoToWater() throws Exception {
+		assertMockRecognition("river-memory.jpg", "RIVER", "WATER", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsParkPathPhotoToWalk() throws Exception {
+		assertMockRecognition("park-path.jpg", "PATH", "WALK", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsStudyBookPhotoToStudy() throws Exception {
+		assertMockRecognition("study-book.jpg", "STUDY", "STUDY", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsLectureNotePhotoToStudy() throws Exception {
+		assertMockRecognition("lecture-note.jpg", "LECTURE", "STUDY", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsLibraryReadingPhotoToStudy() throws Exception {
+		assertMockRecognition("library-reading.jpg", "READING", "STUDY", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsCodingLaptopPhotoToWork() throws Exception {
+		assertMockRecognition("coding-laptop.jpg", "CODING", "WORK", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsProgrammingProjectPhotoToWork() throws Exception {
+		assertMockRecognition("programming-project.jpg", "PROGRAMMING", "WORK", true, false);
+	}
+
+	@Test
+	void mockRecognitionMapsNotebookComputerPhotoToWork() throws Exception {
+		assertMockRecognition("notebook-computer.jpg", "COMPUTER", "WORK", true, false);
+	}
+
+	@Test
+	void unknownPhotoReturnsFallbackAndRecordsUnknownVillageMemory() throws Exception {
+		Photo unknownPhoto = createPhoto(character, null, "IMG_1234.HEIC");
+
+		performRecognize(unknownPhoto.getId(), accessToken)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.recognizedObject").value("UNKNOWN"))
+				.andExpect(jsonPath("$.category").value("UNKNOWN"))
+				.andExpect(jsonPath("$.confidence").value(0))
+				.andExpect(jsonPath("$.recognized").value(false))
+				.andExpect(jsonPath("$.fallback").value(true));
+
+		assertEquals(1, villageMemoryRepository.count());
+	}
+
+	@Test
 	void duplicateRecognitionIsReused() throws Exception {
 		String firstResponse = performRecognize(photo.getId(), accessToken)
 				.andExpect(status().isOk())
@@ -165,12 +256,46 @@ class RecognitionIntegrationTests {
 	}
 
 	@Test
+	void multipartRecognitionUsesValidatedImageAndPersistsOnce() throws Exception {
+		Photo catPhoto = createPhoto(character, null, "cat.jpg");
+		MockMultipartFile image = new MockMultipartFile(
+				"file", "cat.jpg", "image/jpeg", jpegBytes());
+
+		mockMvc.perform(multipart("/api/photos/{photoId}/recognize-with-image", catPhoto.getId())
+				.file(image)
+				.header("Authorization", "Bearer " + accessToken))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.photoId").value(catPhoto.getId()))
+				.andExpect(jsonPath("$.recognizedObject").value("CAT"))
+				.andExpect(jsonPath("$.category").value("ANIMAL"));
+
+		assertEquals(1, recognitionRepository.count());
+	}
+
+	@Test
+	void multipartRecognitionRejectsCorruptImageWithoutPersistence() throws Exception {
+		MockMultipartFile corrupt = new MockMultipartFile(
+				"file", "cat.jpg", "image/jpeg",
+				new byte[] {(byte) 0xff, (byte) 0xd8, (byte) 0xff, 1, 2});
+
+		mockMvc.perform(multipart("/api/photos/{photoId}/recognize-with-image", photo.getId())
+				.file(corrupt)
+				.header("Authorization", "Bearer " + accessToken))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("이미지를 읽을 수 없습니다."));
+
+		assertEquals(0, recognitionRepository.count());
+	}
+
+	@Test
 	void mockRecognitionReturnsFlowerWithNinetyFiveConfidence() throws Exception {
 		performRecognize(photo.getId(), accessToken)
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.recognizedObject").value("FLOWER"))
+				.andExpect(jsonPath("$.category").value("NATURE"))
 				.andExpect(jsonPath("$.confidence").value(95))
-				.andExpect(jsonPath("$.recognized").value(true));
+				.andExpect(jsonPath("$.recognized").value(true))
+				.andExpect(jsonPath("$.fallback").value(false));
 	}
 
 	@Test
@@ -182,7 +307,24 @@ class RecognitionIntegrationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", hasSize(1)))
 				.andExpect(jsonPath("$[0].photoId").value(photo.getId()))
-				.andExpect(jsonPath("$[0].recognizedObject").value("FLOWER"));
+				.andExpect(jsonPath("$[0].recognizedObject").value("FLOWER"))
+				.andExpect(jsonPath("$[0].category").value("NATURE"));
+	}
+
+	private void assertMockRecognition(
+			String originalFileName,
+			String expectedObject,
+			String expectedCategory,
+			boolean expectedRecognized,
+			boolean expectedFallback) throws Exception {
+		Photo target = createPhoto(character, null, originalFileName);
+
+		performRecognize(target.getId(), accessToken)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.recognizedObject").value(expectedObject))
+				.andExpect(jsonPath("$.category").value(expectedCategory))
+				.andExpect(jsonPath("$.recognized").value(expectedRecognized))
+				.andExpect(jsonPath("$.fallback").value(expectedFallback));
 	}
 
 	private org.springframework.test.web.servlet.ResultActions performRecognize(Long photoId, String token)
@@ -207,15 +349,33 @@ class RecognitionIntegrationTests {
 	}
 
 	private Photo createPhoto(Character owner, Plant plant) {
+		return createPhoto(owner, plant, "flower.jpg");
+	}
+
+	private Photo createPhoto(Character owner, Plant plant, String originalFileName) {
 		String storedFileName = UUID.randomUUID() + ".jpg";
 		return photoRepository.save(Photo.create(
 				owner,
 				plant,
-				"flower.jpg",
+				originalFileName,
 				storedFileName,
 				"image/jpeg",
 				10,
 				"/uploads/photos/" + storedFileName));
+	}
+
+	private byte[] jpegBytes() {
+		try {
+			BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
+			image.setRGB(0, 0, 0xff446688);
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			if (!ImageIO.write(image, "jpg", output)) {
+				throw new AssertionError("JPEG test writer is unavailable.");
+			}
+			return output.toByteArray();
+		} catch (java.io.IOException exception) {
+			throw new AssertionError(exception);
+		}
 	}
 
 	private void deleteTestData() {

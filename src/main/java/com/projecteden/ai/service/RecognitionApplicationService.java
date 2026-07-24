@@ -32,6 +32,8 @@ import com.projecteden.memorytaxonomy.observation.UploadedImagePayload;
 import com.projecteden.photo.domain.Photo;
 import com.projecteden.photo.repository.PhotoRepository;
 import com.projecteden.photo.storage.PhotoStorageService;
+import com.projecteden.photo.storage.PhotoUploadValidator;
+import com.projecteden.photo.storage.ValidatedPhotoUpload;
 import com.projecteden.village.service.VillageService;
 import com.projecteden.world.ecology.WorldEcologyService;
 import com.projecteden.world.ecology.WorldPlacedObject;
@@ -53,6 +55,7 @@ public class RecognitionApplicationService {
 	private final VillageService villageService;
 	private final ApplicationEventPublisher eventPublisher;
 	private final PhotoStorageService photoStorageService;
+	private final PhotoUploadValidator photoUploadValidator;
 	private final WorldEcologyService worldEcologyService;
 
 	public RecognitionApplicationService(
@@ -68,6 +71,7 @@ public class RecognitionApplicationService {
 			VillageService villageService,
 			ApplicationEventPublisher eventPublisher,
 			PhotoStorageService photoStorageService,
+			PhotoUploadValidator photoUploadValidator,
 			WorldEcologyService worldEcologyService) {
 		this.recognitionRepository = recognitionRepository;
 		this.photoRepository = photoRepository;
@@ -81,6 +85,7 @@ public class RecognitionApplicationService {
 		this.villageService = villageService;
 		this.eventPublisher = eventPublisher;
 		this.photoStorageService = photoStorageService;
+		this.photoUploadValidator = photoUploadValidator;
 		this.worldEcologyService = worldEcologyService;
 	}
 
@@ -103,7 +108,12 @@ public class RecognitionApplicationService {
 				.orElseThrow(() -> new ResourceNotFoundException("사진을 찾을 수 없습니다."));
 		Character character = findCharacterByUserId(userId);
 		validatePhotoOwner(photo, character);
-		UploadedImagePayload payload = UploadedImagePayload.from(file);
+		ValidatedPhotoUpload upload = photoUploadValidator.validate(file);
+		UploadedImagePayload payload = UploadedImagePayload.of(
+				upload.originalFileName(),
+				upload.contentType(),
+				upload.size(),
+				upload.bytes());
 
 		return recognitionRepository.findByPhotoId(photoId)
 				.map(this::toResponse)

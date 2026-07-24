@@ -138,11 +138,22 @@ public class ResonanceService {
 		if (recognizedObject == RecognizedObject.UNKNOWN) {
 			return new Reward(ResonanceRewardType.NONE, null, 0, 5);
 		}
+		if (!isSeedRewardObject(recognizedObject)) {
+			return new Reward(ResonanceRewardType.NONE, null, 0, 5);
+		}
 		return new Reward(
 				ResonanceRewardType.SEED,
 				SeedType.valueOf(recognizedObject.name()),
 				1,
 				0);
+	}
+
+	private boolean isSeedRewardObject(RecognizedObject recognizedObject) {
+		return recognizedObject == RecognizedObject.FLOWER
+				|| recognizedObject == RecognizedObject.TOMATO
+				|| recognizedObject == RecognizedObject.CARROT
+				|| recognizedObject == RecognizedObject.POTATO
+				|| recognizedObject == RecognizedObject.WHEAT;
 	}
 
 	private void grantReward(Long characterId, Reward reward) {
@@ -187,7 +198,7 @@ public class ResonanceService {
 			return resonance.getRecognizedObject() + "와 공명하여 "
 					+ resonance.getRewardSeedType() + " 씨앗을 획득했습니다.";
 		}
-		return "UNKNOWN과 약하게 공명하여 골드를 획득했습니다.";
+		return resonance.getRecognizedObject() + "와 약하게 공명하여 골드를 획득했습니다.";
 	}
 
 	private record Reward(
