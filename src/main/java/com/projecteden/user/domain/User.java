@@ -95,6 +95,14 @@ public class User {
 		return status;
 	}
 
+	public boolean isActive() {
+		return "ACTIVE".equals(status);
+	}
+
+	public void changeStatus(String status) {
+		this.status = status;
+	}
+
 	public LocalDateTime getLastLoginAt() {
 		return lastLoginAt;
 	}

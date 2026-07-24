@@ -54,7 +54,8 @@ class UserSignupIntegrationTests {
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id").isNumber())
 				.andExpect(jsonPath("$.email").value("test@example.com"))
-				.andExpect(jsonPath("$.nickname").value("eden"));
+				.andExpect(jsonPath("$.nickname").value("eden"))
+				.andExpect(jsonPath("$.password").doesNotExist());
 
 		User savedUser = userRepository.findByEmail("test@example.com").orElseThrow();
 		assertFalse(savedUser.getPassword().equals("password123"));
@@ -64,6 +65,23 @@ class UserSignupIntegrationTests {
 		assertEquals("ACTIVE", savedUser.getStatus());
 		assertNotNull(savedUser.getCreatedAt());
 		assertNotNull(savedUser.getUpdatedAt());
+	}
+
+	@Test
+	void signupNormalizesEmailBeforePersistence() throws Exception {
+		mockMvc.perform(post("/api/users/signup")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "email": " TEST@EXAMPLE.COM ",
+						  "password": "password123",
+						  "nickname": "eden"
+						}
+						"""))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.email").value("test@example.com"));
+
+		assertTrue(userRepository.existsByEmail("test@example.com"));
 	}
 
 	@Test
@@ -79,7 +97,7 @@ class UserSignupIntegrationTests {
 						  "nickname": "eden"
 						}
 						"""))
-				.andExpect(status().isBadRequest())
+				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.message").value("이미 사용 중인 이메일입니다."));
 	}
 
@@ -94,6 +112,42 @@ class UserSignupIntegrationTests {
 						  "nickname": "eden"
 						}
 						"""))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void duplicateNicknameFails() throws Exception {
+		userRepository.save(new User("existing@example.com", "encoded-password", "eden"));
+
+		mockMvc.perform(post("/api/users/signup")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "email": "new@example.com",
+						  "password": "password123",
+						  "nickname": "eden"
+						}
+						"""))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.message").value("이미 사용 중인 닉네임입니다."));
+	}
+
+	@Test
+	void weakPasswordAndMissingRequiredFieldsFailValidation() throws Exception {
+		mockMvc.perform(post("/api/users/signup")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "email": "test@example.com",
+						  "password": "short",
+						  "nickname": "eden"
+						}
+						"""))
+				.andExpect(status().isBadRequest());
+
+		mockMvc.perform(post("/api/users/signup")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
 				.andExpect(status().isBadRequest());
 	}
 }

@@ -9,8 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.projecteden.auth.dto.LoginRequest;
 import com.projecteden.auth.dto.LoginResponse;
 import com.projecteden.auth.jwt.JwtTokenProvider;
+import com.projecteden.common.exception.AuthenticationFailureException;
 import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
+import com.projecteden.user.service.EmailNormalizer;
 
 @Service
 public class AuthService {
@@ -32,11 +34,11 @@ public class AuthService {
 
 	@Transactional
 	public LoginResponse login(LoginRequest request) {
-		User user = userRepository.findByEmail(request.email())
-				.orElseThrow(() -> new IllegalArgumentException(LOGIN_FAILURE_MESSAGE));
+		User user = userRepository.findByEmail(EmailNormalizer.normalize(request.email()))
+				.orElseThrow(() -> new AuthenticationFailureException(LOGIN_FAILURE_MESSAGE));
 
-		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-			throw new IllegalArgumentException(LOGIN_FAILURE_MESSAGE);
+		if (!user.isActive() || !passwordEncoder.matches(request.password(), user.getPassword())) {
+			throw new AuthenticationFailureException(LOGIN_FAILURE_MESSAGE);
 		}
 		user.recordLogin(LocalDateTime.now());
 

@@ -29,6 +29,20 @@ public class GlobalExceptionHandler {
 				.body(Map.of("message", exception.getMessage()));
 	}
 
+	@ExceptionHandler(AuthenticationFailureException.class)
+	public ResponseEntity<Map<String, String>> handleAuthenticationFailureException(
+			AuthenticationFailureException exception) {
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(Map.of("message", exception.getMessage()));
+	}
+
+	@ExceptionHandler(DuplicateResourceException.class)
+	public ResponseEntity<Map<String, String>> handleDuplicateResourceException(
+			DuplicateResourceException exception) {
+		return ResponseEntity.status(HttpStatus.CONFLICT)
+				.body(Map.of("message", exception.getMessage()));
+	}
+
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<Map<String, String>> handleResourceNotFoundException(
 			ResourceNotFoundException exception) {
@@ -46,7 +60,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<Map<String, String>> handleDataIntegrityViolationException(
 			DataIntegrityViolationException exception) {
-		return ResponseEntity.badRequest()
+		return ResponseEntity.status(HttpStatus.CONFLICT)
 				.body(Map.of("message", "이미 존재하거나 사용할 수 없는 값입니다."));
 	}
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.projecteden.user.repository.UserRepository;
+import com.projecteden.user.domain.User;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,9 +39,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		if (authorization != null && authorization.startsWith(BEARER_PREFIX)) {
 			String token = authorization.substring(BEARER_PREFIX.length());
-			if (jwtTokenProvider.validateToken(token)) {
-				Long userId = jwtTokenProvider.getUserId(token);
-				userRepository.findById(userId).ifPresent(user -> {
+			JwtTokenProvider.JwtDiagnostics diagnostics = jwtTokenProvider.diagnose(token);
+
+			if (diagnostics.valid()) {
+				Long userId = Long.valueOf(diagnostics.subject());
+				userRepository.findById(userId).filter(User::isActive).ifPresent(user -> {
 					SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole());
 					UsernamePasswordAuthenticationToken authentication =
 							new UsernamePasswordAuthenticationToken(user, null, List.of(authority));

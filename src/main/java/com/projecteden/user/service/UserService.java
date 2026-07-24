@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.projecteden.common.exception.DuplicateResourceException;
 import com.projecteden.user.domain.User;
 import com.projecteden.user.dto.SignupRequest;
 import com.projecteden.user.dto.SignupResponse;
@@ -22,12 +23,16 @@ public class UserService {
 
 	@Transactional
 	public SignupResponse signup(SignupRequest request) {
-		if (userRepository.existsByEmail(request.email())) {
-			throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+		String email = EmailNormalizer.normalize(request.email());
+		if (userRepository.existsByEmail(email)) {
+			throw new DuplicateResourceException("이미 사용 중인 이메일입니다.");
+		}
+		if (userRepository.existsByNickname(request.nickname())) {
+			throw new DuplicateResourceException("이미 사용 중인 닉네임입니다.");
 		}
 
 		User user = new User(
-				request.email(),
+				email,
 				passwordEncoder.encode(request.password()),
 				request.nickname());
 		User savedUser = userRepository.save(user);

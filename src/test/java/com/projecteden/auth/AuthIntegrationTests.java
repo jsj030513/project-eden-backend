@@ -72,9 +72,18 @@ class AuthIntegrationTests {
 	}
 
 	@Test
+	void loginNormalizesEmailAndAcceptsLegacyBcryptHash() throws Exception {
+		assertTrue(user.getPassword().startsWith("$2a$"));
+
+		performLogin(" TEST@EXAMPLE.COM ", "password123")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.accessToken").isNotEmpty());
+	}
+
+	@Test
 	void loginFailsWithWrongPassword() throws Exception {
 		performLogin("test@example.com", "wrong-password")
-				.andExpect(status().isBadRequest())
+				.andExpect(status().isUnauthorized())
 				.andExpect(jsonPath("$.message")
 						.value("이메일 또는 비밀번호가 올바르지 않습니다."));
 	}
@@ -82,7 +91,7 @@ class AuthIntegrationTests {
 	@Test
 	void loginFailsWithUnknownEmail() throws Exception {
 		performLogin("unknown@example.com", "password123")
-				.andExpect(status().isBadRequest())
+				.andExpect(status().isUnauthorized())
 				.andExpect(jsonPath("$.message")
 						.value("이메일 또는 비밀번호가 올바르지 않습니다."));
 	}
@@ -105,6 +114,39 @@ class AuthIntegrationTests {
 	@Test
 	void meFailsWithoutAccessToken() throws Exception {
 		mockMvc.perform(get("/api/users/me"))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void meFailsWithMalformedTokenOrMissingBearerPrefix() throws Exception {
+		mockMvc.perform(get("/api/users/me")
+				.header("Authorization", "Bearer not-a-jwt"))
+				.andExpect(status().isUnauthorized());
+		mockMvc.perform(get("/api/users/me")
+				.header("Authorization", jwtTokenProvider.generateAccessToken(user)))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void loginRejectsBlankRequestFields() throws Exception {
+		performLogin("", "")
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void inactiveUserCannotLoginOrUsePreviouslyIssuedToken() throws Exception {
+		MvcResult loginResult = performLogin("test@example.com", "password123")
+				.andExpect(status().isOk())
+				.andReturn();
+		String accessToken = readAccessToken(loginResult);
+
+		user.changeStatus("INACTIVE");
+		userRepository.saveAndFlush(user);
+
+		performLogin("test@example.com", "password123")
+				.andExpect(status().isUnauthorized());
+		mockMvc.perform(get("/api/users/me")
+				.header("Authorization", "Bearer " + accessToken))
 				.andExpect(status().isUnauthorized());
 	}
 

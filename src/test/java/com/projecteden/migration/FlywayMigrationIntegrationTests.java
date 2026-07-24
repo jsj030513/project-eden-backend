@@ -71,6 +71,7 @@ class FlywayMigrationIntegrationTests {
                                 "--spring.flyway.enabled=true",
                                 "--spring.flyway.baseline-on-migrate=false",
                                 "--spring.devtools.restart.enabled=false",
+                                "--jwt.secret=project-eden-migration-test-only-secret-with-32-bytes",
                                 "--eden.dataset.enabled=false",
                                 "--eden.dataset.collection.enabled=false",
                                 "--eden.benchmark.orchestration.enabled=false",
