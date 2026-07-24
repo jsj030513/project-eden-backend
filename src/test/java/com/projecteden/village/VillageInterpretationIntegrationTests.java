@@ -96,6 +96,20 @@ class VillageInterpretationIntegrationTests {
 	}
 
 	@Test
+	void studyMemoryUsesQuietTheme() {
+		record(RecognizedObject.BOOK, 1);
+		assertEquals(VillageTheme.QUIET_VILLAGE, interpretation().theme());
+		assertEquals(VillageCategory.STUDY, interpretation().primaryCategory());
+	}
+
+	@Test
+	void workMemoryUsesWarmTheme() {
+		record(RecognizedObject.CODING, 1);
+		assertEquals(VillageTheme.WARM_VILLAGE, interpretation().theme());
+		assertEquals(VillageCategory.WORK, interpretation().primaryCategory());
+	}
+
+	@Test
 	void unknownMemoryUsesQuietTheme() {
 		record(RecognizedObject.UNKNOWN, 1);
 		assertEquals(VillageTheme.QUIET_VILLAGE, interpretation().theme());

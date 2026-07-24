@@ -12,6 +12,8 @@ import com.projecteden.ai.domain.RecognizedObject;import com.projecteden.ai.repo
 	@Test void firstVillageIsEmpty(){var village=service.getMyVillage(character.getId());assertEquals(VillageCategory.UNKNOWN,village.dominantCategory());assertEquals(0,village.totalMemoryCount());assertEquals("아직 마을은 조용히 당신의 첫 순간을 기다리고 있습니다.",village.latestMessage());}
 	@Test void flowerRecognitionCreatesNatureMemory(){Photo photo=photo();recognitionService.recognizePhoto(user.getId(),photo.getId());assertMemory(VillageCategory.NATURE,1);}
 	@Test void tomatoCreatesFoodMemory(){service.recordVillageMemory(character.getId(),RecognizedObject.TOMATO);assertMemory(VillageCategory.FOOD,1);}
+	@Test void studyObjectCreatesStudyMemory(){service.recordVillageMemory(character.getId(),RecognizedObject.BOOK);assertMemory(VillageCategory.STUDY,1);}
+	@Test void workObjectCreatesWorkMemory(){service.recordVillageMemory(character.getId(),RecognizedObject.CODING);assertMemory(VillageCategory.WORK,1);}
 	@Test void unknownCreatesUnknownMemory(){service.recordVillageMemory(character.getId(),RecognizedObject.UNKNOWN);assertMemory(VillageCategory.UNKNOWN,1);}
 	@Test void repeatedCategoryIncreasesCount(){service.recordVillageMemory(character.getId(),RecognizedObject.TOMATO);service.recordVillageMemory(character.getId(),RecognizedObject.CARROT);assertMemory(VillageCategory.FOOD,2);}
 	@Test void firstNatureMemoryCreatesFlowerPath(){record(RecognizedObject.FLOWER,1);assertChange(VillageChangeType.FLOWER_PATH);}
