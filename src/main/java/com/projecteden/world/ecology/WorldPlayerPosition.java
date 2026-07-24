@@ -1,0 +1,4 @@
+package com.projecteden.world.ecology;
+import com.projecteden.character.domain.Character;
+import jakarta.persistence.*;
+@Entity @Table(name="world_player_positions",uniqueConstraints=@UniqueConstraint(columnNames="character_id")) public class WorldPlayerPosition { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) private Long id; @OneToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="character_id",nullable=false,unique=true) private Character character; @Column(nullable=false) private int x; @Column(nullable=false) private int y; protected WorldPlayerPosition(){} private WorldPlayerPosition(Character c,int x,int y){this.character=c;this.x=x;this.y=y;} public static WorldPlayerPosition create(Character c,int x,int y){return new WorldPlayerPosition(c,x,y);} public void moveTo(int x,int y){this.x=x;this.y=y;} public int getX(){return x;} public int getY(){return y;} }

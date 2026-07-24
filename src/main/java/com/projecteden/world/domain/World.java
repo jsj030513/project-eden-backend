@@ -59,6 +59,9 @@ public class World {
 	@Column(nullable = false)
 	private int food = 20;
 
+	@Column(name = "village_template_version", nullable = false)
+	private int villageTemplateVersion = 0;
+
 	private LocalDateTime createdAt;
 
 	private LocalDateTime updatedAt;
@@ -79,6 +82,9 @@ public class World {
 	public void addGold(int amount) {
 		gold += amount;
 	}
+
+	public int getVillageTemplateVersion() { return villageTemplateVersion; }
+	public void applyVillageTemplateVersion(int version) { villageTemplateVersion = Math.max(villageTemplateVersion, version); }
 
 	@PrePersist
 	void prePersist() {

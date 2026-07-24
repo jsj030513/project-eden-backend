@@ -1,0 +1,1 @@
+package com.projecteden.world.ecology; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface WorldPlayerPositionRepository extends JpaRepository<WorldPlayerPosition,Long>{Optional<WorldPlayerPosition> findByCharacterId(Long characterId);}

@@ -148,6 +148,8 @@ public class VillageInterpretationService {
 			case WALK -> VillageTheme.WALKING_VILLAGE;
 			case WATER -> VillageTheme.WATERSIDE_VILLAGE;
 			case ANIMAL -> VillageTheme.ANIMAL_FRIENDLY_VILLAGE;
+			case STUDY -> VillageTheme.QUIET_VILLAGE;
+			case WORK -> VillageTheme.WARM_VILLAGE;
 			case UNKNOWN -> VillageTheme.QUIET_VILLAGE;
 		};
 	}
@@ -159,7 +161,9 @@ public class VillageInterpretationService {
 			case WALK -> 2;
 			case WATER -> 3;
 			case ANIMAL -> 4;
-			case UNKNOWN -> 5;
+			case STUDY -> 5;
+			case WORK -> 6;
+			case UNKNOWN -> 7;
 		};
 	}
 

@@ -1,0 +1,1 @@
+package com.projecteden.world.ecology; public record PlacedObjectResponse(Long id,WorldAssetType assetType,WorldCategory worldCategory,int x,int y,TerrainType terrainType,HabitatType habitatType,Long worldChangeId,int depth,int variant){}
