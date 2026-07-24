@@ -129,3 +129,50 @@ Target and Photo conflicts leave no partial losing Recognition, Memory Classific
 The final backend regression completed 524 tests with 0 failures, 0 errors, and 4 existing opt-in skips in 1 minute 7 seconds. `./mvnw package` repeated the same 524-test result and produced the executable archive successfully in 1 minute 14 seconds. The standalone H2 concurrency run and the required PostgreSQL concurrency run both passed 4/4. `git diff --check` passed after the documentation update.
 
 Village MVP Polish 2차-C backend planting persistence, concurrency, idempotent retry, and transaction evidence are complete. Crop growth, harvest, economy, inventory changes, NPC progression, and additional community features remain out of scope.
+
+## Village MVP Polish 2차-D1 template NPC TALK contract
+
+The four official Village NPCs remain template `WorldPlacedObject` rows: `DEFAULT_NPC_GUIDE`, `DEFAULT_NPC_GARDENER`, `DEFAULT_NPC_MEMORY_KEEPER`, and `DEFAULT_NPC_ANIMAL_CARETAKER`. Their typed `npcPositions` identities and `availableInteractions` target ids are owned by the authenticated character. They are deliberately not linked to the separate legacy `Npc.id`, `/api/npcs/{id}/dialogue`, or `NpcMemory` persistence model.
+
+TALK availability is derived only from the persisted `WorldPlayerPosition`. Every template NPC exposes exactly one TALK interaction from each cardinally adjacent tile, none from a diagonal or Manhattan distance greater than one, and no target belonging to another character. The response preserves target id, exact asset type, display name, and coordinates. Existing server ordering remains `TALK > INTERACT > INSPECT`; no production contract, endpoint, table, column, or migration changed for D1.
+
+`WorldTileInteractionIntegrationTests` now verifies all four NPCs across all four cardinal directions, diagonal and out-of-range exclusion, exact target metadata, duplicate prevention, stored-position authority through the authenticated state endpoint, and cross-character ownership isolation. The targeted class completed 19 tests with zero failure, error, or skip. The complete backend regression completed 528 tests with zero failures, zero errors, and four existing opt-in skips in 1 minute 3 seconds.
+
+## Village MVP Polish 2차-D2 COMMUNITY/ANIMAL contract
+
+`COMMUNITY_HOUSE`, `DEFAULT_DOG`, `DEFAULT_CAT`, and `DEFAULT_BIRD` remain read-only template `WorldPlacedObject` interactions. The authenticated world-state response exposes them as `INTERACT` from exactly one cardinal tile: the community house uses category `COMMUNITY`, display name `마을 회관`, and action `둘러보기`; the three animals use category `ANIMAL`, their asset-specific Korean display names, and action `다가가기`.
+
+No endpoint, DTO, persistence model, migration, animal entity, or community interior was added. Interaction ownership remains character-scoped, diagonals and distances greater than one remain unavailable, and the existing server order remains `TALK > INTERACT > INSPECT`. When the template contains more than one object with the same asset type, range assertions bind to the exact coordinate and target id rather than treating a different owned object as the same target.
+
+`WorldTileInteractionIntegrationTests` now verifies the four read-only targets from all four cardinal directions, exact target id/asset/name/category/action metadata, diagonal and out-of-range exclusion, duplicate prevention, cross-character isolation, and unchanged priority. `VillageIntegrationTests` verifies that the existing authenticated history response never returns another character's category history. The targeted run completed 42 tests with zero failure, error, or skip.
+
+The final D2 backend regression completed 532 tests, 0 failures, 0 errors, and 4 existing opt-in skips in 1 minute 10 seconds. `./mvnw package` repeated all 532 tests and produced the executable archive successfully in 1 minute 11 seconds. Backend production code remained unchanged.
+
+## Village MVP Polish 2차-D final contract evidence
+
+The D3 closure reran the combined `WorldTileInteractionIntegrationTests` and
+`VillageIntegrationTests` contract as 42 tests with no failure, error, or skip.
+The four template NPCs passed cardinal TALK, diagonal/distance exclusion,
+persisted-player-position authority, ownership isolation, exact target
+metadata, and duplicate prevention. `COMMUNITY_HOUSE`, `DEFAULT_DOG`,
+`DEFAULT_CAT`, and `DEFAULT_BIRD` passed the equivalent read-only INTERACT
+contract. Candidate order remained `TALK > INTERACT > INSPECT`, with equal
+priority ordered deterministically by `y`, `x`, asset type, and target id.
+
+The final complete Maven run passed 532 tests with 0 failures, 0 errors, and 4
+existing opt-in skips in 1 minute 6 seconds. `./mvnw package` independently
+repeated all 532 tests and produced the executable archive in 1 minute 20
+seconds. No PostgreSQL-specific D interaction script exists; D1/D2 introduced
+no database contract or migration, so the established test-profile integration
+contract was the applicable backend evidence. Backend production code was not
+changed during D3.
+
+## Village MVP Polish 2차-D final status
+
+Template NPC dialogue closure and Community/Animal read-only interaction
+closure are complete. The browser evidence, responsive matrix, network
+no-mutation checks, console checks, two consecutive aggregate runs, and
+fixture-isolation audit are recorded in the frontend contextual-interaction
+document. Physical iPhone Safari, persistent dialogue progress, animal
+mutation, Community interior, and a full focus trap remain outside this
+read-only MVP boundary.

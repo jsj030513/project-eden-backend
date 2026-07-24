@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,21 @@ import com.projecteden.world.ecology.PlayerPositionResponse;
 @ActiveProfiles("test")
 @Transactional
 class WorldTileInteractionIntegrationTests {
+
+	private static final List<TemplateNpcFixture> TEMPLATE_NPCS = List.of(
+			new TemplateNpcFixture(WorldAssetType.DEFAULT_NPC_GUIDE, "마을 안내자", 10, 6),
+			new TemplateNpcFixture(WorldAssetType.DEFAULT_NPC_GARDENER, "정원 관리인", 5, 8),
+			new TemplateNpcFixture(WorldAssetType.DEFAULT_NPC_MEMORY_KEEPER, "기억 보관인", 12, 9),
+			new TemplateNpcFixture(WorldAssetType.DEFAULT_NPC_ANIMAL_CARETAKER, "동물 돌봄이", 16, 8));
+	private static final List<ContextualFixture> READ_ONLY_CONTEXTS = List.of(
+			new ContextualFixture(WorldAssetType.COMMUNITY_HOUSE, TileInteractionCategory.COMMUNITY,
+					"마을 회관", "둘러보기", 7, 4),
+			new ContextualFixture(WorldAssetType.DEFAULT_DOG, TileInteractionCategory.ANIMAL,
+					"강아지", "다가가기", 17, 9),
+			new ContextualFixture(WorldAssetType.DEFAULT_CAT, TileInteractionCategory.ANIMAL,
+					"고양이", "다가가기", 18, 9),
+			new ContextualFixture(WorldAssetType.DEFAULT_BIRD, TileInteractionCategory.ANIMAL,
+					"새", "다가가기", 19, 8));
 
 	@Autowired
 	private WorldEcologyService worldEcologyService;
@@ -190,6 +206,99 @@ class WorldTileInteractionIntegrationTests {
 	}
 
 	@Test
+	void exposesExactlyOneCardinalTalkForEveryTemplateNpcUsingThePersistedPosition() {
+		User user = createUser("all-template-npcs");
+		Character character = createCharacter(user);
+		WorldStateResponse bootstrapped = worldEcologyService.stateForUser(user.getId());
+
+		for (TemplateNpcFixture npc : TEMPLATE_NPCS) {
+			Long expectedTargetId = bootstrapped.placedObjects().stream()
+					.filter(object -> object.assetType() == npc.assetType())
+					.findFirst()
+					.orElseThrow()
+					.id();
+			for (int[] direction : List.of(
+					new int[] {0, -1},
+					new int[] {0, 1},
+					new int[] {-1, 0},
+					new int[] {1, 0})) {
+				movePersistedPosition(character, npc.x() + direction[0], npc.y() + direction[1]);
+
+				assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
+						.filteredOn(interaction -> interaction.type() == TileInteractionType.TALK
+								&& interaction.targetAssetType() == npc.assetType())
+						.singleElement()
+						.satisfies(interaction -> {
+							assertThat(interaction.targetId()).isEqualTo(expectedTargetId);
+							assertThat(interaction.displayName()).isEqualTo(npc.displayName());
+							assertThat(interaction.x()).isEqualTo(npc.x());
+							assertThat(interaction.y()).isEqualTo(npc.y());
+						});
+			}
+		}
+	}
+
+	@Test
+	void excludesDiagonalAndOutOfRangeTalkForEveryTemplateNpc() {
+		User user = createUser("template-npc-range");
+		Character character = createCharacter(user);
+		worldEcologyService.stateForUser(user.getId());
+
+		for (TemplateNpcFixture npc : TEMPLATE_NPCS) {
+			movePersistedPosition(character, npc.x() + 1, npc.y() + 1);
+			assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
+					.noneMatch(interaction -> interaction.type() == TileInteractionType.TALK
+							&& interaction.targetAssetType() == npc.assetType());
+
+			movePersistedPosition(character, npc.x() + 2, npc.y());
+			assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
+					.noneMatch(interaction -> interaction.type() == TileInteractionType.TALK
+							&& interaction.targetAssetType() == npc.assetType());
+		}
+	}
+
+	@Test
+	void serializesTalkFromTheStoredPlayerPositionWithoutAcceptingClientRangeHints() throws Exception {
+		User user = createUser("stored-talk-position");
+		Character character = createCharacter(user);
+		movePersistedPosition(character, 10, 7);
+		String token = jwtTokenProvider.generateAccessToken(user);
+
+		mockMvc.perform(get("/api/worlds/me/state")
+				.header("Authorization", "Bearer " + token))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.playerPosition.x").value(10))
+				.andExpect(jsonPath("$.playerPosition.y").value(7))
+				.andExpect(jsonPath("$.availableInteractions[0].type").value("TALK"))
+				.andExpect(jsonPath("$.availableInteractions[0].targetAssetType").value("DEFAULT_NPC_GUIDE"))
+				.andExpect(jsonPath("$.availableInteractions[0].displayName").value("마을 안내자"));
+	}
+
+	@Test
+	void keepsTemplateNpcTalkTargetsOwnedAndIsolatedPerCharacter() {
+		User firstUser = createUser("npc-owner-first");
+		Character firstCharacter = createCharacter(firstUser);
+		User secondUser = createUser("npc-owner-second");
+		Character secondCharacter = createCharacter(secondUser);
+
+		for (TemplateNpcFixture npc : TEMPLATE_NPCS) {
+			movePersistedPosition(firstCharacter, npc.x(), npc.y() + 1);
+			movePersistedPosition(secondCharacter, npc.x(), npc.y() + 1);
+
+			TileInteractionResponse firstTalk = talkFor(firstUser, npc.assetType());
+			TileInteractionResponse secondTalk = talkFor(secondUser, npc.assetType());
+
+			assertThat(firstTalk.targetId()).isNotEqualTo(secondTalk.targetId());
+			assertThat(worldEcologyService.stateForUser(firstUser.getId()).availableInteractions())
+					.extracting(TileInteractionResponse::targetId)
+					.doesNotContain(secondTalk.targetId());
+			assertThat(worldEcologyService.stateForUser(secondUser.getId()).availableInteractions())
+					.extracting(TileInteractionResponse::targetId)
+					.doesNotContain(firstTalk.targetId());
+		}
+	}
+
+	@Test
 	void exposesStableEmptyFarmContextWithoutReplacingTheExistingInspectContract() {
 		User user = createUser("empty-farm");
 		Character character = createCharacter(user);
@@ -247,21 +356,111 @@ class WorldTileInteractionIntegrationTests {
 	}
 
 	@Test
+	void exposesExactReadOnlyContextFromEveryCardinalDirectionWithoutDuplicates() {
+		User user = createUser("read-only-cardinal");
+		Character character = createCharacter(user);
+		WorldStateResponse bootstrapped = worldEcologyService.stateForUser(user.getId());
+
+		for (ContextualFixture fixture : READ_ONLY_CONTEXTS) {
+			Long expectedTargetId = bootstrapped.placedObjects().stream()
+					.filter(object -> object.assetType() == fixture.assetType()
+							&& object.x() / 48 == fixture.x()
+							&& object.y() / 48 == fixture.y())
+					.findFirst()
+					.orElseThrow()
+					.id();
+			for (int[] direction : List.of(
+					new int[] {0, -1},
+					new int[] {0, 1},
+					new int[] {-1, 0},
+					new int[] {1, 0})) {
+				movePersistedPosition(character, fixture.x() + direction[0], fixture.y() + direction[1]);
+
+				assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
+						.filteredOn(interaction -> interaction.type() == TileInteractionType.INTERACT
+								&& interaction.targetAssetType() == fixture.assetType())
+						.singleElement()
+						.satisfies(interaction -> {
+							assertThat(interaction.targetId()).isEqualTo(expectedTargetId);
+							assertThat(interaction.category()).isEqualTo(fixture.category());
+							assertThat(interaction.displayName()).isEqualTo(fixture.displayName());
+							assertThat(interaction.actionLabel()).isEqualTo(fixture.actionLabel());
+							assertThat(interaction.x()).isEqualTo(fixture.x());
+							assertThat(interaction.y()).isEqualTo(fixture.y());
+						});
+			}
+		}
+	}
+
+	@Test
+	void excludesDiagonalAndOutOfRangeReadOnlyContextForEveryAnimalAndCommunityAsset() {
+		User user = createUser("read-only-range");
+		Character character = createCharacter(user);
+		WorldStateResponse bootstrapped = worldEcologyService.stateForUser(user.getId());
+
+		for (ContextualFixture fixture : READ_ONLY_CONTEXTS) {
+			Long expectedTargetId = bootstrapped.placedObjects().stream()
+					.filter(object -> object.assetType() == fixture.assetType()
+							&& object.x() / 48 == fixture.x()
+							&& object.y() / 48 == fixture.y())
+					.findFirst()
+					.orElseThrow()
+					.id();
+			movePersistedPosition(character, fixture.x() + 1, fixture.y() + 1);
+			assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
+					.noneMatch(interaction -> interaction.type() == TileInteractionType.INTERACT
+							&& Objects.equals(interaction.targetId(), expectedTargetId));
+
+			movePersistedPosition(character, fixture.x() + 2, fixture.y());
+			assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
+					.noneMatch(interaction -> interaction.type() == TileInteractionType.INTERACT
+							&& Objects.equals(interaction.targetId(), expectedTargetId));
+		}
+	}
+
+	@Test
+	void keepsEveryAnimalAndCommunityTargetOwnedAndIsolatedPerCharacter() {
+		User firstUser = createUser("read-only-owner-first");
+		Character firstCharacter = createCharacter(firstUser);
+		User secondUser = createUser("read-only-owner-second");
+		Character secondCharacter = createCharacter(secondUser);
+
+		for (ContextualFixture fixture : READ_ONLY_CONTEXTS) {
+			movePersistedPosition(firstCharacter, fixture.x(), fixture.y() + 1);
+			movePersistedPosition(secondCharacter, fixture.x(), fixture.y() + 1);
+
+			TileInteractionResponse first = contextualFor(firstUser, fixture.assetType());
+			TileInteractionResponse second = contextualFor(secondUser, fixture.assetType());
+
+			assertThat(first.targetId()).isNotEqualTo(second.targetId());
+			assertThat(worldEcologyService.stateForUser(firstUser.getId()).availableInteractions())
+					.extracting(TileInteractionResponse::targetId)
+					.doesNotContain(second.targetId());
+			assertThat(worldEcologyService.stateForUser(secondUser.getId()).availableInteractions())
+					.extracting(TileInteractionResponse::targetId)
+					.doesNotContain(first.targetId());
+		}
+	}
+
+	@Test
 	void resolvesTalkBeforeContextualInteractionWhenCandidatesShareATile() {
 		User user = createUser("priority");
 		Character character = createCharacter(user);
 		worldEcologyService.stateForUser(user.getId());
-		addContextualObject(character, "TEST_CONTEXT_ON_NPC", WorldAssetType.FARM_PLOT_EMPTY, 10, 6);
-		movePersistedPosition(character, 10, 7);
+		for (TemplateNpcFixture npc : TEMPLATE_NPCS) {
+			addContextualObject(character, "TEST_CONTEXT_ON_" + npc.assetType(),
+					WorldAssetType.FARM_PLOT_EMPTY, npc.x(), npc.y());
+			movePersistedPosition(character, npc.x(), npc.y() + 1);
 
-		assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
-				.filteredOn(interaction -> coordinate(interaction).equals("10,6"))
-				.singleElement()
-				.satisfies(interaction -> {
-					assertThat(interaction.type()).isEqualTo(TileInteractionType.TALK);
-					assertThat(interaction.targetAssetType()).isEqualTo(WorldAssetType.DEFAULT_NPC_GUIDE);
-					assertThat(interaction.category()).isNull();
-				});
+			assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
+					.filteredOn(interaction -> coordinate(interaction).equals(npc.x() + "," + npc.y()))
+					.singleElement()
+					.satisfies(interaction -> {
+						assertThat(interaction.type()).isEqualTo(TileInteractionType.TALK);
+						assertThat(interaction.targetAssetType()).isEqualTo(npc.assetType());
+						assertThat(interaction.category()).isNull();
+					});
+		}
 	}
 
 	@Test
@@ -405,7 +604,39 @@ class WorldTileInteractionIntegrationTests {
 		return interactions.stream().map(WorldTileInteractionIntegrationTests::coordinate).toList();
 	}
 
+	private TileInteractionResponse talkFor(User user, WorldAssetType assetType) {
+		return worldEcologyService.stateForUser(user.getId()).availableInteractions().stream()
+				.filter(interaction -> interaction.type() == TileInteractionType.TALK
+						&& interaction.targetAssetType() == assetType)
+				.findFirst()
+				.orElseThrow();
+	}
+
+	private TileInteractionResponse contextualFor(User user, WorldAssetType assetType) {
+		return worldEcologyService.stateForUser(user.getId()).availableInteractions().stream()
+				.filter(interaction -> interaction.type() == TileInteractionType.INTERACT
+						&& interaction.targetAssetType() == assetType)
+				.findFirst()
+				.orElseThrow();
+	}
+
 	private static String coordinate(TileInteractionResponse interaction) {
 		return interaction.x() + "," + interaction.y();
+	}
+
+	private record TemplateNpcFixture(
+			WorldAssetType assetType,
+			String displayName,
+			int x,
+			int y) {
+	}
+
+	private record ContextualFixture(
+			WorldAssetType assetType,
+			TileInteractionCategory category,
+			String displayName,
+			String actionLabel,
+			int x,
+			int y) {
 	}
 }
