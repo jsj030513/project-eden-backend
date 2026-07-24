@@ -19,6 +19,23 @@ eden:
   photo-storage:
     root: ${EDEN_PHOTO_STORAGE_ROOT:${user.home}/.project-eden/uploads/photos}
 
+  dataset:
+    enabled: ${EDEN_DATASET_ENABLED:false}
+    collection:
+      enabled: ${EDEN_DATASET_COLLECTION_ENABLED:false}
+    root: ${EDEN_DATASET_ROOT:}
+
+  benchmark:
+    orchestration:
+      enabled: ${EDEN_BENCHMARK_ORCHESTRATION_ENABLED:false}
+      prediction-source: ${EDEN_BENCHMARK_PREDICTION_SOURCE:supplied}
+
+  image-evaluation:
+    enabled: ${EDEN_IMAGE_EVALUATION_ENABLED:false}
+    manifest: ${EDEN_IMAGE_EVALUATION_MANIFEST:}
+    output-directory: ${EDEN_IMAGE_EVALUATION_OUTPUT:}
+    max-cases: ${EDEN_IMAGE_EVALUATION_MAX_CASES:100}
+
 ---
 spring:
   config:
