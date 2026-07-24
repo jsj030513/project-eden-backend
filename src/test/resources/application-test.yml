@@ -18,3 +18,9 @@ jwt:
 eden:
   photo-storage:
     root: ${java.io.tmpdir}/project-eden-test-photos
+  image-normalization:
+    enabled: true
+  image-observation:
+    provider: mock
+  image-evaluation:
+    enabled: false

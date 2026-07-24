@@ -1,0 +1,15 @@
+model:
+  id: yolox-nano-coco
+  family: yolox
+  sourceRepository: Megvii-BaseDetection/YOLOX
+  sourceType: official-release
+  sourceUrl: ""
+  resolvedUrl: ""
+  filename: yolox_nano.onnx
+  sha256: ""
+  sizeBytes: 0
+  inputWidth: 416
+  inputHeight: 416
+  opset: 0
+  labels: coco-80
+  redistributionReviewed: false

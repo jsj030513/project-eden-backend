@@ -1,8 +1,13 @@
 HELP.md
 .env
+.env.local
 target/
 *.log
 .DS_Store
+evaluation-images/
+evaluation-output/
+models/*.onnx
+!models/.gitkeep
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
