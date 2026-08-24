@@ -1,0 +1,67 @@
+version: 1
+quests:
+  - id: quest.mayor.first-talk
+    npcKey: NPC_MAYOR
+    title: "마을의 첫인사"
+    description: "마을 안내자와 대화를 마쳐 보세요."
+    requirements: { eventType: TALK, target: NPC_MAYOR, targetCount: 1, minAffinity: 0 }
+    rewards: { affinity: 30 }
+    nextQuest: quest.mayor.community
+    repeatable: false
+    hidden: false
+    version: 1
+  - id: quest.mayor.community
+    npcKey: NPC_MAYOR
+    title: "마을 회관 둘러보기"
+    description: "마을 회관을 방문해 공동체의 기록을 확인하세요."
+    requirements:
+      eventType: COMMUNITY_VISIT
+      target: COMMUNITY_HOUSE
+      targetCount: 1
+      minAffinity: 100
+      completedQuest: quest.mayor.first-talk
+    rewards: { affinity: 40 }
+    repeatable: false
+    hidden: false
+    version: 1
+  - id: quest.gardener.inspect
+    npcKey: NPC_GARDENER
+    title: "정원의 작은 발견"
+    description: "정원이나 농장의 대상을 살펴보세요."
+    requirements: { eventType: INSPECT, target: FARM, targetCount: 1, minAffinity: 0 }
+    rewards: { affinity: 25 }
+    nextQuest: quest.gardener.photo
+    repeatable: false
+    hidden: false
+    version: 1
+  - id: quest.gardener.photo
+    npcKey: NPC_GARDENER
+    title: "새로운 기억의 씨앗"
+    description: "사진으로 새로운 기억을 남겨 보세요."
+    requirements:
+      eventType: TAKE_PHOTO
+      targetCount: 1
+      minAffinity: 100
+      completedQuest: quest.gardener.inspect
+    rewards: { affinity: 40 }
+    repeatable: true
+    hidden: false
+    version: 1
+  - id: quest.researcher.visit
+    npcKey: NPC_RESEARCHER
+    title: "외곽의 기록"
+    description: "마을 외곽의 새로운 장소를 방문하세요."
+    requirements: { eventType: VISIT_LOCATION, target: OUTER_REGION, targetCount: 1, minAffinity: 0 }
+    rewards: { affinity: 30 }
+    repeatable: false
+    hidden: true
+    version: 1
+  - id: quest.caretaker.animal
+    npcKey: NPC_CARETAKER
+    title: "동물 친구에게 인사하기"
+    description: "마을의 동물과 교감해 보세요."
+    requirements: { eventType: ANIMAL_INTERACTION, targetCount: 1, minAffinity: 0 }
+    rewards: { affinity: 30 }
+    repeatable: true
+    hidden: false
+    version: 1

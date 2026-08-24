@@ -1,0 +1,82 @@
+version: 1
+dialogues:
+  dialogue.mayor.default:
+    startNode: welcome
+    nodes:
+      welcome:
+        speaker: NPC_MAYOR
+        text: "어서 와요. 오늘 마을을 어떻게 둘러보고 싶나요?"
+        choices:
+          - { id: village, label: "마을 이야기를 들을래요", nextNode: village }
+          - { id: activity, label: "지금 무엇을 하고 있나요?", nextNode: activity }
+      village:
+        speaker: NPC_MAYOR
+        text: "당신의 기억이 길과 풍경을 조금씩 바꾸고 있어요."
+        choices:
+          - { id: finish, label: "고마워요", nextNode: goodbye }
+      activity:
+        speaker: NPC_MAYOR
+        text: "마을 사람들이 안전하게 오갈 길을 살피고 있어요."
+        choices:
+          - { id: finish, label: "다음에 또 만나요", nextNode: goodbye }
+      goodbye: { speaker: NPC_MAYOR, text: "천천히 둘러보고 가세요.", close: true }
+  dialogue.gardener.default:
+    startNode: welcome
+    nodes:
+      welcome:
+        speaker: NPC_GARDENER
+        text: "정원에는 오늘도 작은 변화가 자라고 있어요."
+        choices:
+          - { id: garden, label: "정원 이야기를 들을래요", nextNode: garden }
+          - { id: activity, label: "무엇을 돌보고 있나요?", nextNode: activity }
+      garden:
+        speaker: NPC_GARDENER
+        text: "꽃과 채소의 기억이 이 밭을 더 풍성하게 만들어요."
+        choices:
+          - { id: finish, label: "정원을 둘러볼게요", nextNode: goodbye }
+      activity:
+        speaker: NPC_GARDENER
+        text: "지금은 꽃밭과 빈 밭 사이의 길을 정리하고 있어요."
+        choices:
+          - { id: finish, label: "수고하세요", nextNode: goodbye }
+      goodbye: { speaker: NPC_GARDENER, text: "좋은 기억을 발견하면 다시 들러 주세요.", close: true }
+  dialogue.researcher.default:
+    startNode: welcome
+    nodes:
+      welcome:
+        speaker: NPC_RESEARCHER
+        text: "남겨진 기억들을 차분히 정리하고 있었어요."
+        choices:
+          - { id: memory, label: "기억은 어디에 남나요?", nextNode: memory }
+          - { id: activity, label: "지금 기록 중인가요?", nextNode: activity }
+      memory:
+        speaker: NPC_RESEARCHER
+        text: "완성된 기억은 마을 풍경과 기록 속에 함께 머물러요."
+        choices:
+          - { id: finish, label: "알려줘서 고마워요", nextNode: goodbye }
+      activity:
+        speaker: NPC_RESEARCHER
+        text: "최근 생긴 변화가 빠짐없이 기록됐는지 확인하고 있어요."
+        choices:
+          - { id: finish, label: "다음에 또 물어볼게요", nextNode: goodbye }
+      goodbye: { speaker: NPC_RESEARCHER, text: "당신의 다음 기억도 잘 보관할게요.", close: true }
+  dialogue.caretaker.default:
+    startNode: welcome
+    nodes:
+      welcome:
+        speaker: NPC_CARETAKER
+        text: "동물 친구들이 편안하게 지내는지 살피고 있어요."
+        choices:
+          - { id: animals, label: "동물들은 잘 지내나요?", nextNode: animals }
+          - { id: activity, label: "무엇을 하고 있나요?", nextNode: activity }
+      animals:
+        speaker: NPC_CARETAKER
+        text: "각자 좋아하는 자리에서 안전하게 쉬고 있어요."
+        choices:
+          - { id: finish, label: "친구들을 만나볼게요", nextNode: goodbye }
+      activity:
+        speaker: NPC_CARETAKER
+        text: "먹이와 쉼터 주변을 한 바퀴 확인하는 중이에요."
+        choices:
+          - { id: finish, label: "수고하세요", nextNode: goodbye }
+      goodbye: { speaker: NPC_CARETAKER, text: "동물들에게 천천히 다가가 주세요.", close: true }

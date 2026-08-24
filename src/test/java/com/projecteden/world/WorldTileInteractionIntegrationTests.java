@@ -1,5 +1,6 @@
 package com.projecteden.world;
 
+import com.projecteden.world.domain.World;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,6 +45,8 @@ import com.projecteden.world.ecology.WorldPlayerPositionRepository;
 import com.projecteden.world.ecology.WorldStateResponse;
 import com.projecteden.world.ecology.MapBoundsResponse;
 import com.projecteden.world.ecology.PlayerPositionResponse;
+import com.projecteden.world.generation.ChunkGenerationService;
+import com.projecteden.world.repository.WorldRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -58,7 +61,7 @@ class WorldTileInteractionIntegrationTests {
 			new TemplateNpcFixture(WorldAssetType.DEFAULT_NPC_ANIMAL_CARETAKER, "동물 돌봄이", 16, 8));
 	private static final List<ContextualFixture> READ_ONLY_CONTEXTS = List.of(
 			new ContextualFixture(WorldAssetType.COMMUNITY_HOUSE, TileInteractionCategory.COMMUNITY,
-					"마을 회관", "둘러보기", 7, 4),
+					"마을 회관", "둘러보기", 14, 6),
 			new ContextualFixture(WorldAssetType.DEFAULT_DOG, TileInteractionCategory.ANIMAL,
 					"강아지", "다가가기", 17, 9),
 			new ContextualFixture(WorldAssetType.DEFAULT_CAT, TileInteractionCategory.ANIMAL,
@@ -68,6 +71,10 @@ class WorldTileInteractionIntegrationTests {
 
 	@Autowired
 	private WorldEcologyService worldEcologyService;
+	@Autowired
+	private ChunkGenerationService chunkGenerationService;
+	@Autowired
+	private WorldRepository worldRepository;
 
 	@Autowired
 	private WorldPlayerPositionRepository positions;
@@ -124,20 +131,26 @@ class WorldTileInteractionIntegrationTests {
 	void excludesOutOfBoundsAndDiagonalCoordinatesAtCornersAndEdges() {
 		User user = createUser("bounds");
 		Character character = createCharacter(user);
+		worldRepository.saveAndFlush(World.create(character, character.getId()));
+		worldEcologyService.stateForUser(user.getId());
+		World world = worldRepository.findByCharacterId(character.getId()).orElseThrow();
 
-		movePersistedPosition(character, 0, 0);
+		chunkGenerationService.ensureGenerated(world.getId(), -1, -1);
+		movePersistedPosition(character, World.DEFAULT_MIN_TILE_X, World.DEFAULT_MIN_TILE_Y);
 		assertThat(coordinates(worldEcologyService.stateForUser(user.getId()).availableInteractions()))
-				.containsExactly("1,0", "0,1")
-				.doesNotContain("-1,0", "0,-1", "-1,-1", "1,1");
+				.containsExactly("-7,-8", "-8,-7")
+				.doesNotContain("-9,-8", "-8,-9", "-9,-9", "-7,-7");
 
-		movePersistedPosition(character, WorldEcologyService.MAX_X, WorldEcologyService.MAX_Y);
+		chunkGenerationService.ensureGenerated(world.getId(), 3, 2);
+		movePersistedPosition(character, World.DEFAULT_MAX_TILE_X, World.DEFAULT_MAX_TILE_Y);
 		assertThat(coordinates(worldEcologyService.stateForUser(user.getId()).availableInteractions()))
-				.containsExactly("23,14", "22,15")
-				.doesNotContain("23,16", "24,15", "22,14");
+				.containsExactly("31,22", "30,23")
+				.doesNotContain("31,24", "32,23", "30,22");
 
-		movePersistedPosition(character, 5, 0);
+		chunkGenerationService.ensureGenerated(world.getId(), 0, -1);
+		movePersistedPosition(character, 5, World.DEFAULT_MIN_TILE_Y);
 		assertThat(coordinates(worldEcologyService.stateForUser(user.getId()).availableInteractions()))
-				.containsExactly("4,0", "6,0", "5,1");
+				.containsExactly("4,-8", "6,-8", "5,-7");
 	}
 
 	@Test
@@ -351,8 +364,25 @@ class WorldTileInteractionIntegrationTests {
 		User user = createUser("community");
 		Character character = createCharacter(user);
 
-		assertContext(contextualAt(user, character, 7, 3, WorldAssetType.COMMUNITY_HOUSE),
+		assertContext(contextualAt(user, character, 14, 7, WorldAssetType.COMMUNITY_HOUSE),
 				TileInteractionCategory.COMMUNITY, "마을 회관", "둘러보기");
+	}
+
+	@Test
+	void exposesCommunityHouseOnlyFromItsFrontDoorApproach() {
+		User user = createUser("community-entrance");
+		Character character = createCharacter(user);
+		WorldStateResponse state = worldEcologyService.stateForUser(user.getId());
+		Long houseId = state.placedObjects().stream()
+				.filter(object -> object.assetType() == WorldAssetType.COMMUNITY_HOUSE)
+				.findFirst().orElseThrow().id();
+
+		for (int[] position : List.of(new int[] {13, 6}, new int[] {15, 6}, new int[] {14, 5})) {
+			movePersistedPosition(character, position[0], position[1]);
+			assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())
+					.noneMatch(interaction -> interaction.type() == TileInteractionType.INTERACT
+							&& Objects.equals(interaction.targetId(), houseId));
+		}
 	}
 
 	@Test
@@ -369,11 +399,10 @@ class WorldTileInteractionIntegrationTests {
 					.findFirst()
 					.orElseThrow()
 					.id();
-			for (int[] direction : List.of(
-					new int[] {0, -1},
-					new int[] {0, 1},
-					new int[] {-1, 0},
-					new int[] {1, 0})) {
+			List<int[]> directions = fixture.assetType() == WorldAssetType.COMMUNITY_HOUSE
+					? List.of(new int[] {0, 1})
+					: List.of(new int[] {0, -1}, new int[] {0, 1}, new int[] {-1, 0}, new int[] {1, 0});
+			for (int[] direction : directions) {
 				movePersistedPosition(character, fixture.x() + direction[0], fixture.y() + direction[1]);
 
 				assertThat(worldEcologyService.stateForUser(user.getId()).availableInteractions())

@@ -45,7 +45,13 @@ import com.projecteden.seed.domain.SeedType;
 import com.projecteden.user.domain.User;
 import com.projecteden.user.repository.UserRepository;
 import com.projecteden.world.domain.World;
+import com.projecteden.world.npc.NpcAffinityEventRepository;
+import com.projecteden.world.npc.NpcAffinityStateRepository;
+import com.projecteden.world.npc.NpcQuestEventRepository;
+import com.projecteden.world.npc.NpcQuestStateRepository;
 import com.projecteden.world.repository.WorldRepository;
+import com.projecteden.world.ecology.WorldChangeRepository;
+import com.projecteden.world.ecology.WorldPlacedObjectRepository;
 import com.projecteden.evolution.repository.WorldEvolutionRepository;
 import com.projecteden.evolution.repository.WorldDecorationRepository;
 import com.projecteden.evolution.repository.EvolutionHistoryRepository;
@@ -84,6 +90,13 @@ class RecognitionIntegrationTests {
 
 	@Autowired
 	private WorldRepository worldRepository;
+	@Autowired private WorldPlacedObjectRepository worldPlacedObjectRepository;
+	@Autowired private WorldChangeRepository worldChangeRepository;
+
+	@Autowired private NpcQuestEventRepository npcQuestEventRepository;
+	@Autowired private NpcQuestStateRepository npcQuestStateRepository;
+	@Autowired private NpcAffinityEventRepository npcAffinityEventRepository;
+	@Autowired private NpcAffinityStateRepository npcAffinityStateRepository;
 
 	@Autowired
 	private CharacterRepository characterRepository;
@@ -379,6 +392,8 @@ class RecognitionIntegrationTests {
 	}
 
 	private void deleteTestData() {
+		worldPlacedObjectRepository.deleteAllInBatch();
+		worldChangeRepository.deleteAllInBatch();
 		villageHistoryRepository.deleteAll();
 		villageChangeRepository.deleteAll();
 		villageThemeSnapshotRepository.deleteAll();
@@ -387,6 +402,10 @@ class RecognitionIntegrationTests {
 		worldDecorationRepository.deleteAll();
 		worldEvolutionRepository.deleteAll();
 		recognitionRepository.deleteAll();
+		npcQuestEventRepository.deleteAll();
+		npcQuestStateRepository.deleteAll();
+		npcAffinityEventRepository.deleteAll();
+		npcAffinityStateRepository.deleteAll();
 		photoRepository.deleteAll();
 		plantRepository.deleteAll();
 		regionRepository.deleteAll();

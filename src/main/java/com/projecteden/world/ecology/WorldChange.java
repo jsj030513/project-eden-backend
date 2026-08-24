@@ -3,6 +3,7 @@ package com.projecteden.world.ecology;
 import java.time.LocalDateTime;
 import com.projecteden.ai.domain.Recognition;
 import com.projecteden.character.domain.Character;
+import com.projecteden.world.chunk.WorldChunkRegionType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -24,6 +25,16 @@ public class WorldChange {
     @Column(nullable = false) private int focusX;
     @Column(nullable = false) private int focusY;
     @Column(nullable = false) private LocalDateTime createdAt;
+    @Column(name = "ecology_profile_key", length = 96) private String ecologyProfileKey;
+    @Enumerated(EnumType.STRING) @Column(name = "ecology_category", length = 32) private EcologyCategory ecologyCategory;
+    @Column(name = "placement_applied") private Boolean placementApplied;
+    @Enumerated(EnumType.STRING) @Column(name = "placement_region_type", length = 32) private WorldChunkRegionType placementRegionType;
+    @Column(name = "placement_chunk_x") private Integer placementChunkX;
+    @Column(name = "placement_chunk_y") private Integer placementChunkY;
+    @Column(name = "spawn_zone_tag", length = 64) private String spawnZoneTag;
+    @Column(name = "placement_version") private Integer placementVersion;
+    @Enumerated(EnumType.STRING) @Column(name = "placement_reason", length = 64) private EcologyPlacementReason placementReason;
+    @Column(name = "placed_at") private LocalDateTime placedAt;
     protected WorldChange() { }
     private WorldChange(Character character, Recognition recognition, WorldPlacedObject targetObject, WorldCategory category, WorldAssetType assetType, String messageKey, String message, int focusX, int focusY) {
         this.character = character; this.recognition = recognition; this.worldCategory = category; this.assetType = assetType;
@@ -33,6 +44,40 @@ public class WorldChange {
     public static WorldChange create(Character c, Recognition r, WorldCategory category, WorldAssetType assetType, String key, String message, int x, int y) { return new WorldChange(c, r, null, category, assetType, key, message, x, y); }
     public static WorldChange targeted(Character c, Recognition r, WorldPlacedObject target, WorldCategory category, WorldAssetType assetType, String key, String message, int x, int y) { return new WorldChange(c, r, target, category, assetType, key, message, x, y); }
     public static WorldChange template(Character c, WorldCategory category, WorldAssetType assetType, String key, String message, int x, int y) { return new WorldChange(c, null, null, category, assetType, key, message, x, y); }
+    public void recordEcologyPlacement(
+            String profileKey,
+            EcologyCategory category,
+            boolean applied,
+            WorldChunkRegionType regionType,
+            Integer chunkX,
+            Integer chunkY,
+            String zoneTag,
+            int version,
+            EcologyPlacementReason reason,
+            LocalDateTime placedAt) {
+        if (placementReason != null) throw new IllegalStateException("ECOLOGY_PLACEMENT_IMMUTABLE");
+        this.ecologyProfileKey = profileKey;
+        this.ecologyCategory = category;
+        this.placementApplied = applied;
+        this.placementRegionType = regionType;
+        this.placementChunkX = chunkX;
+        this.placementChunkY = chunkY;
+        this.spawnZoneTag = zoneTag;
+        this.placementVersion = version;
+        this.placementReason = reason;
+        this.placedAt = placedAt;
+    }
+    public void moveFocus(int x, int y) { this.focusX = x; this.focusY = y; }
     @PrePersist void created() { createdAt = LocalDateTime.now(); }
     public Long getId() { return id; } public Character getCharacter() { return character; } public Recognition getRecognition() { return recognition; } public WorldPlacedObject getTargetObject() { return targetObject; } public WorldCategory getWorldCategory() { return worldCategory; } public WorldAssetType getAssetType() { return assetType; } public String getMessageKey() { return messageKey; } public String getDisplayMessage() { return displayMessage; } public int getFocusX() { return focusX; } public int getFocusY() { return focusY; }
+    public String getEcologyProfileKey() { return ecologyProfileKey; }
+    public EcologyCategory getEcologyCategory() { return ecologyCategory; }
+    public Boolean getPlacementApplied() { return placementApplied; }
+    public WorldChunkRegionType getPlacementRegionType() { return placementRegionType; }
+    public Integer getPlacementChunkX() { return placementChunkX; }
+    public Integer getPlacementChunkY() { return placementChunkY; }
+    public String getSpawnZoneTag() { return spawnZoneTag; }
+    public Integer getPlacementVersion() { return placementVersion; }
+    public EcologyPlacementReason getPlacementReason() { return placementReason; }
+    public LocalDateTime getPlacedAt() { return placedAt; }
 }

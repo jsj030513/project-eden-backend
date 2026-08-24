@@ -17,5 +17,6 @@ public class WorldPlacedObject {
     protected WorldPlacedObject() { }
     private WorldPlacedObject(WorldChange change, WorldAssetType type, TerrainType terrain, HabitatType habitat, int x, int y) { this.worldChange=change; this.assetType=type; this.terrain=terrain; this.habitat=habitat; this.positionX=x; this.positionY=y; }
     public static WorldPlacedObject create(WorldChange c, WorldAssetType t, TerrainType terrain, HabitatType habitat, int x, int y) { return new WorldPlacedObject(c,t,terrain,habitat,x,y); }
+    public void moveTo(TerrainType nextTerrain, int x, int y) { this.terrain=nextTerrain; this.positionX=x; this.positionY=y; }
     public Long getId() { return id; } public WorldChange getWorldChange() { return worldChange; } public WorldAssetType getAssetType() { return assetType; } public TerrainType getTerrain() { return terrain; } public HabitatType getHabitat() { return habitat; } public int getPositionX() { return positionX; } public int getPositionY() { return positionY; }
 }

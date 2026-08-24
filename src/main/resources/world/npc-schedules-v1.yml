@@ -1,0 +1,26 @@
+version: 1
+schedules:
+  NPC_MAYOR:
+    scheduleKey: schedule.mayor
+    slots:
+      - { key: rest, startMinute: 0, endMinute: 480, activity: RESTING, destination: MAYOR_HOME, dialogueKey: dialogue.mayor.default, interactionEnabled: true }
+      - { key: plaza, startMinute: 480, endMinute: 1020, activity: WORKING, destination: PLAZA_NORTH, dialogueKey: dialogue.mayor.default, interactionEnabled: true }
+      - { key: evening, startMinute: 1020, endMinute: 1440, activity: SOCIALIZING, destination: PLAZA_EAST, dialogueKey: dialogue.mayor.default, interactionEnabled: true }
+  NPC_GARDENER:
+    scheduleKey: schedule.gardener
+    slots:
+      - { key: rest, startMinute: 0, endMinute: 420, activity: RESTING, destination: GARDENER_HOME, dialogueKey: dialogue.gardener.default, interactionEnabled: true }
+      - { key: flowers, startMinute: 420, endMinute: 1080, activity: WORKING, destination: FLOWER_GARDEN, dialogueKey: dialogue.gardener.default, interactionEnabled: true }
+      - { key: evening, startMinute: 1080, endMinute: 1440, activity: SOCIALIZING, destination: PLAZA_WEST, dialogueKey: dialogue.gardener.default, interactionEnabled: true }
+  NPC_RESEARCHER:
+    scheduleKey: schedule.researcher
+    slots:
+      - { key: archive, startMinute: 0, endMinute: 540, activity: RESTING, destination: ARCHIVE, dialogueKey: dialogue.researcher.default, interactionEnabled: true }
+      - { key: research, startMinute: 540, endMinute: 1140, activity: WORKING, destination: COMMUNITY_HOUSE_FRONT, dialogueKey: dialogue.researcher.default, interactionEnabled: true }
+      - { key: records, startMinute: 1140, endMinute: 1440, activity: IDLE, destination: ARCHIVE, dialogueKey: dialogue.researcher.default, interactionEnabled: true }
+  NPC_CARETAKER:
+    scheduleKey: schedule.caretaker
+    slots:
+      - { key: rest, startMinute: 0, endMinute: 360, activity: RESTING, destination: CARETAKER_HOME, dialogueKey: dialogue.caretaker.default, interactionEnabled: true }
+      - { key: animals, startMinute: 360, endMinute: 1080, activity: WORKING, destination: ANIMAL_AREA, dialogueKey: dialogue.caretaker.default, interactionEnabled: true }
+      - { key: evening, startMinute: 1080, endMinute: 1440, activity: SOCIALIZING, destination: ANIMAL_AREA_WEST, dialogueKey: dialogue.caretaker.default, interactionEnabled: true }

@@ -106,8 +106,8 @@ public class WorldPlantingService {
         if (target.getAssetType() != WorldAssetType.FARM_PLOT_EMPTY) {
             throw conflict("TARGET_CHANGED");
         }
-        int targetX = target.getPositionX() / 48;
-        int targetY = target.getPositionY() / 48;
+        int targetX = WorldCoordinates.pixelToTile(target.getPositionX());
+        int targetY = WorldCoordinates.pixelToTile(target.getPositionY());
         if (targetX != request.expectedX() || targetY != request.expectedY()) {
             throw conflict("TARGET_CHANGED");
         }
@@ -140,7 +140,9 @@ public class WorldPlantingService {
                 !recognition.isRecognized(),
                 worldChange);
         return new PlantMemoryResponse(
-                photo.getId(), target.getId(), target.getPositionX() / 48, target.getPositionY() / 48,
+                photo.getId(), target.getId(),
+                WorldCoordinates.pixelToTile(target.getPositionX()),
+                WorldCoordinates.pixelToTile(target.getPositionY()),
                 cropAsset != null, cropAsset, recognitionResponse, worldChange);
     }
 

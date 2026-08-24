@@ -1,0 +1,221 @@
+version: 1
+profiles:
+  - profileKey: DOG_V1
+    recognitionTypes: [DOG]
+    ecologyCategory: ANIMAL
+    projectedAssetType: DEFAULT_DOG
+    preferredRegions: [MEADOW]
+    allowedRegions: [HUB, MEADOW]
+    preferredTerrain: [GRASS, FLOWER_FIELD]
+    allowedTerrain: [GRASS, FLOWER_FIELD]
+    spawnZoneTags: [OPEN_GRASS, PATH_EDGE, HOUSE_EDGE, FARM_EDGE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 8
+    maxPerZone: 3
+    minDistanceFromPlayerSpawn: 2
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 2
+    movementHabitat: LAND
+    fallbackPolicy: HUB_SAFE_ZONE
+    priority: 100
+    version: 1
+
+  - profileKey: CAT_V1
+    recognitionTypes: [CAT]
+    ecologyCategory: ANIMAL
+    projectedAssetType: DEFAULT_CAT
+    preferredRegions: [FOREST, MEADOW, HUB]
+    allowedRegions: [HUB, MEADOW, FOREST]
+    preferredTerrain: [FOREST, GRASS]
+    allowedTerrain: [GRASS, FLOWER_FIELD, FOREST]
+    spawnZoneTags: [CLEARING, FOREST_ENTRANCE, TREE_EDGE, OPEN_GRASS, HOUSE_EDGE, FLOWER_GARDEN]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 8
+    maxPerZone: 3
+    minDistanceFromPlayerSpawn: 2
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 2
+    movementHabitat: LAND
+    fallbackPolicy: HUB_SAFE_ZONE
+    priority: 100
+    version: 1
+
+  - profileKey: BIRD_V1
+    recognitionTypes: [BIRD]
+    ecologyCategory: ANIMAL
+    projectedAssetType: DEFAULT_BIRD
+    preferredRegions: [POND, FOREST, MEADOW]
+    allowedRegions: [HUB, MEADOW, FOREST, POND]
+    preferredTerrain: [GRASS, FLOWER_FIELD, FOREST]
+    allowedTerrain: [GRASS, FLOWER_FIELD, FOREST]
+    spawnZoneTags: [SHORE, REED_EDGE, FOREST_ENTRANCE, TREE_EDGE, FLOWER_PATCH, POND_EDGE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 8
+    maxPerZone: 3
+    minDistanceFromPlayerSpawn: 2
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 2
+    movementHabitat: AIR
+    fallbackPolicy: ANY_DISCOVERED_COMPATIBLE
+    priority: 100
+    version: 1
+
+  - profileKey: GENERIC_ANIMAL_V1
+    recognitionTypes: [ANIMAL]
+    ecologyCategory: ANIMAL
+    projectedAssetType: VISITOR
+    preferredRegions: [MEADOW]
+    allowedRegions: [HUB, MEADOW]
+    preferredTerrain: [GRASS]
+    allowedTerrain: [GRASS, FLOWER_FIELD]
+    spawnZoneTags: [OPEN_GRASS, PATH_EDGE, FARM_EDGE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 8
+    maxPerZone: 3
+    minDistanceFromPlayerSpawn: 2
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 2
+    movementHabitat: LAND
+    fallbackPolicy: HUB_SAFE_ZONE
+    priority: 90
+    version: 1
+
+  - profileKey: FLOWER_V1
+    recognitionTypes: [FLOWER, PLANT]
+    ecologyCategory: PLANT
+    projectedAssetType: FLOWER_CLUSTER
+    preferredRegions: [MEADOW, FOREST]
+    allowedRegions: [HUB, MEADOW, FOREST]
+    preferredTerrain: [FLOWER_FIELD]
+    allowedTerrain: [FLOWER_FIELD, GRASS, FOREST]
+    spawnZoneTags: [FLOWER_PATCH, CLEARING, FLOWER_GARDEN, SAFE_MEMORY_ZONE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 12
+    maxPerZone: 4
+    minDistanceFromPlayerSpawn: 1
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 1
+    movementHabitat: DECORATION_ONLY
+    fallbackPolicy: HUB_SAFE_ZONE
+    priority: 80
+    version: 1
+
+  - profileKey: TREE_V1
+    recognitionTypes: [TREE]
+    ecologyCategory: PLANT
+    projectedAssetType: TREE_GROVE
+    preferredRegions: [FOREST, MEADOW]
+    allowedRegions: [HUB, MEADOW, FOREST]
+    preferredTerrain: [FOREST]
+    allowedTerrain: [FOREST, GRASS]
+    spawnZoneTags: [TREE_EDGE, CLEARING, OPEN_GRASS, SAFE_MEMORY_ZONE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 10
+    maxPerZone: 3
+    minDistanceFromPlayerSpawn: 2
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 2
+    movementHabitat: DECORATION_ONLY
+    fallbackPolicy: HUB_SAFE_ZONE
+    priority: 80
+    version: 1
+
+  - profileKey: WATER_MEMORY_V1
+    recognitionTypes: [WATER, RIVER, SEA, POND]
+    ecologyCategory: MEMORY_OBJECT
+    projectedAssetType: POND
+    preferredRegions: [POND]
+    allowedRegions: [HUB, POND]
+    preferredTerrain: [GRASS]
+    allowedTerrain: [GRASS, FLOWER_FIELD]
+    spawnZoneTags: [SHORE, POND_EDGE, SAFE_MEMORY_ZONE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 8
+    maxPerZone: 2
+    minDistanceFromPlayerSpawn: 2
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 2
+    movementHabitat: DECORATION_ONLY
+    fallbackPolicy: HUB_SAFE_ZONE
+    priority: 70
+    version: 1
+
+  - profileKey: FOOD_MEMORY_V1
+    recognitionTypes: [FOOD, BREAD, FRUIT, VEGETABLE, TOMATO, CARROT, POTATO, WHEAT, COFFEE]
+    ecologyCategory: MEMORY_OBJECT
+    projectedAssetType: BAKERY_DETAIL
+    preferredRegions: [HUB, MEADOW]
+    allowedRegions: [HUB, MEADOW]
+    preferredTerrain: [GRASS]
+    allowedTerrain: [GRASS, FLOWER_FIELD]
+    spawnZoneTags: [FARM_EDGE, SAFE_MEMORY_ZONE, OPEN_GRASS]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 12
+    maxPerZone: 4
+    minDistanceFromPlayerSpawn: 1
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 1
+    movementHabitat: DECORATION_ONLY
+    fallbackPolicy: HUB_SAFE_ZONE
+    priority: 60
+    version: 1
+
+  - profileKey: SKY_MEMORY_V1
+    recognitionTypes: [SKY, LANDSCAPE]
+    ecologyCategory: MEMORY_OBJECT
+    projectedAssetType: ATMOSPHERE
+    preferredRegions: [MEADOW, POND]
+    allowedRegions: [HUB, MEADOW, FOREST, POND]
+    preferredTerrain: [GRASS, FLOWER_FIELD]
+    allowedTerrain: [GRASS, FLOWER_FIELD, FOREST]
+    spawnZoneTags: [OPEN_GRASS, CLEARING, SHORE, SAFE_MEMORY_ZONE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 12
+    maxPerZone: 4
+    minDistanceFromPlayerSpawn: 1
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 1
+    movementHabitat: DECORATION_ONLY
+    fallbackPolicy: ANY_DISCOVERED_COMPATIBLE
+    priority: 50
+    version: 1
+
+  - profileKey: GENERAL_MEMORY_V1
+    recognitionTypes: [ROAD, PATH, PARK, STREET, BOOK, NOTEBOOK, STUDY, READING, LECTURE, WRITING, LIBRARY, LAPTOP, COMPUTER, CODING, PROGRAMMING, DESK, OFFICE, MEETING, WORKSPACE, ROOM, DAILY_OBJECT, PERSON, FRIEND, FAMILY, OBJECT]
+    ecologyCategory: MEMORY_OBJECT
+    projectedAssetType: MEMORY_SPARK
+    preferredRegions: [HUB, MEADOW]
+    allowedRegions: [HUB, MEADOW, FOREST, POND]
+    preferredTerrain: [GRASS]
+    allowedTerrain: [GRASS, FLOWER_FIELD, FOREST]
+    spawnZoneTags: [SAFE_MEMORY_ZONE, OPEN_GRASS, CLEARING, SHORE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 12
+    maxPerZone: 4
+    minDistanceFromPlayerSpawn: 1
+    minDistanceFromNpc: 1
+    minDistanceFromSameSpecies: 1
+    movementHabitat: DECORATION_ONLY
+    fallbackPolicy: HUB_SAFE_ZONE
+    priority: 40
+    version: 1
+
+  - profileKey: UNKNOWN_V1
+    recognitionTypes: [UNKNOWN]
+    ecologyCategory: NON_PLACEABLE
+    projectedAssetType: MEMORY_SPARK
+    preferredRegions: []
+    allowedRegions: []
+    preferredTerrain: []
+    allowedTerrain: []
+    spawnZoneTags: [SAFE_MEMORY_ZONE]
+    avoidZoneTags: [CONNECTOR, PROTECTED]
+    maxPerChunk: 1
+    maxPerZone: 1
+    minDistanceFromPlayerSpawn: 0
+    minDistanceFromNpc: 0
+    minDistanceFromSameSpecies: 0
+    movementHabitat: DECORATION_ONLY
+    fallbackPolicy: DO_NOT_PLACE
+    priority: 0
+    version: 1

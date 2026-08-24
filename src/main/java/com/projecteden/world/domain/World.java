@@ -22,6 +22,12 @@ import jakarta.persistence.Table;
 @Table(name = "worlds")
 public class World {
 
+	public static final int DEFAULT_MIN_TILE_X = -8;
+	public static final int DEFAULT_MAX_TILE_X = 31;
+	public static final int DEFAULT_MIN_TILE_Y = -8;
+	public static final int DEFAULT_MAX_TILE_Y = 23;
+	public static final int FIXED_VILLAGE_GENERATION_VERSION = 3;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -62,6 +68,24 @@ public class World {
 	@Column(name = "village_template_version", nullable = false)
 	private int villageTemplateVersion = 0;
 
+	@Column(name = "min_tile_x", nullable = false)
+	private int minTileX = DEFAULT_MIN_TILE_X;
+
+	@Column(name = "max_tile_x", nullable = false)
+	private int maxTileX = DEFAULT_MAX_TILE_X;
+
+	@Column(name = "min_tile_y", nullable = false)
+	private int minTileY = DEFAULT_MIN_TILE_Y;
+
+	@Column(name = "max_tile_y", nullable = false)
+	private int maxTileY = DEFAULT_MAX_TILE_Y;
+
+	@Column(name = "world_generation_version", nullable = false)
+	private int worldGenerationVersion = FIXED_VILLAGE_GENERATION_VERSION;
+
+	@Column(name = "last_animal_movement_at")
+	private LocalDateTime lastAnimalMovementAt;
+
 	private LocalDateTime createdAt;
 
 	private LocalDateTime updatedAt;
@@ -85,6 +109,16 @@ public class World {
 
 	public int getVillageTemplateVersion() { return villageTemplateVersion; }
 	public void applyVillageTemplateVersion(int version) { villageTemplateVersion = Math.max(villageTemplateVersion, version); }
+	public int getMinTileX() { return minTileX; }
+	public int getMaxTileX() { return maxTileX; }
+	public int getMinTileY() { return minTileY; }
+	public int getMaxTileY() { return maxTileY; }
+	public int getWorldGenerationVersion() { return worldGenerationVersion; }
+	public boolean containsTile(int tileX, int tileY) {
+		return tileX >= minTileX && tileX <= maxTileX && tileY >= minTileY && tileY <= maxTileY;
+	}
+	public LocalDateTime getLastAnimalMovementAt() { return lastAnimalMovementAt; }
+	public void markAnimalMovement(LocalDateTime movedAt) { lastAnimalMovementAt = movedAt; }
 
 	@PrePersist
 	void prePersist() {
