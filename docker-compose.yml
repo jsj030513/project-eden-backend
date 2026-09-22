@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-project_eden}
@@ -20,8 +20,6 @@ services:
 
   postgres:
     image: postgres:16
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-project_eden}
       POSTGRES_USER: ${POSTGRES_USER:-eden_user}
@@ -36,8 +34,6 @@ services:
 
   redis:
     image: redis:7
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
