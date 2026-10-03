@@ -1,14 +1,29 @@
 # Backend B1 Flyway Migration Baseline Recovery
 
-## Scope and decision
+## Scope and support contract
 
-B1 restores the Flyway dependencies and the DB baseline plus the tracked `V1`–`V7`
-migrations without rewriting applied SQL. Deployed PostgreSQL databases record
-versions `V1` through `V9`, whose checksums are immutable. This unit does not
-include the `V8` and `V9` upgrade scripts; those exact scripts must be restored
-by their dependent feature units before the existing-database upgrade path is
-considered complete. The new `B9__project_eden_schema_baseline.sql` supplies the
-complete post-V9 schema for a brand-new PostgreSQL database.
+B1 restores the Flyway dependencies, a canonical schema baseline, and the
+tracked `V1`–`V7` migration files without rewriting their SQL. Its supported
+initialization path is a fresh, empty PostgreSQL database. The
+`B9__project_eden_schema_baseline.sql` migration creates the canonical
+Project Eden schema at version 9. Since `V1`–`V7` have lower versions than the
+baseline, Flyway does not execute them individually on this fresh-baseline
+path; they are not an upgrade chain applied before B9.
+
+This unit does not provide a general-purpose in-place upgrade or validation
+path for arbitrary legacy databases. In particular, it does not claim support
+for a database with no Flyway history but a partial pre-existing schema, a
+database with `V1`–`V7` history, a database with `V8`/`V9` history, or a
+database with B9 and subsequent `V10+` history. The local Project Eden
+databases are outside this canonical initialization contract. Their data was
+backed up separately; any later migration or import is governed by a separate
+policy.
+
+The canonical environment starts from an empty PostgreSQL database and is
+created by the repository-managed Flyway baseline. Flyway `repair`, `clean`,
+checksum bypasses, and ignored-migration patterns are not compatibility
+strategies. Future schema changes must be added as normal forward migrations
+after canonical version 9.
 
 This is a schema baseline, not an application-data snapshot. It contains no
 rows, credentials, local paths, or `flyway_schema_history` data.
@@ -17,16 +32,16 @@ rows, credentials, local paths, or `flyway_schema_history` data.
 
 | Version | File | Operation | Dependency / assumption | Existing DB status |
 |---|---|---|---|---|
-| V1 | `V1__create_memory_taxonomy_tables.sql` | Creates taxonomy categories/tags and indexes | Empty taxonomy namespace | Applied; preserve checksum |
-| V2 | `V2__create_memory_classification_tables.sql` | Creates classification/category/tag tables and FKs | `photos`, `recognitions`, V1 taxonomy tables already exist | Applied; preserve checksum |
-| V3 | `V3__add_memory_classification_idempotency.sql` | Adds partial unique recognition projection index | V2 classification table | Applied; preserve checksum |
-| V4 | `V4__align_recognition_object_constraint.sql` | Replaces the recognition object check | Core `recognitions` table | Applied; preserve checksum |
-| V5 | `V5__allow_template_world_changes.sql` | Makes template `recognition_id` nullable | Core `world_changes` table | Applied; preserve checksum |
-| V6 | `V6__add_village_template_version.sql` | Adds template version | Core `worlds` table | Applied; preserve checksum |
-| V7 | `V7__add_soil_terrain_support.sql` | Documents VARCHAR terrain compatibility | No DDL | Applied; preserve checksum |
-| V8 | `V8__align_village_template_postgresql_constraints.sql` | Aligns asset/terrain checks | World ecology tables | Deployed; follow-up unit must restore the original checksum |
-| V9 | `V9__add_targeted_world_planting_projection.sql` | Adds planting target FKs, index, uniqueness, crop check | Recognition/world object/change tables | Deployed; follow-up unit must restore the original checksum |
-| B9 | `B9__project_eden_schema_baseline.sql` | Creates the complete schema at V9 | Brand-new empty PostgreSQL only | New baseline |
+| V1 | `V1__create_memory_taxonomy_tables.sql` | Creates taxonomy categories/tags and indexes | Empty taxonomy namespace | Retained historical migration; not run on fresh B9 path |
+| V2 | `V2__create_memory_classification_tables.sql` | Creates classification/category/tag tables and FKs | `photos`, `recognitions`, V1 taxonomy tables already exist | Retained historical migration; not run on fresh B9 path |
+| V3 | `V3__add_memory_classification_idempotency.sql` | Adds partial unique recognition projection index | V2 classification table | Retained historical migration; not run on fresh B9 path |
+| V4 | `V4__align_recognition_object_constraint.sql` | Replaces the recognition object check | Core `recognitions` table | Retained historical migration; not run on fresh B9 path |
+| V5 | `V5__allow_template_world_changes.sql` | Makes template `recognition_id` nullable | Core `world_changes` table | Retained historical migration; not run on fresh B9 path |
+| V6 | `V6__add_village_template_version.sql` | Adds template version | Core `worlds` table | Retained historical migration; not run on fresh B9 path |
+| V7 | `V7__add_soil_terrain_support.sql` | Documents VARCHAR terrain compatibility | No DDL | Retained historical migration; not run on fresh B9 path |
+| V8 | `V8__align_village_template_postgresql_constraints.sql` | Aligns asset/terrain checks | World ecology tables | Not included in this unit or its support contract |
+| V9 | `V9__add_targeted_world_planting_projection.sql` | Adds planting target FKs, index, uniqueness, crop check | Recognition/world object/change tables | Not included in this unit or its support contract |
+| B9 | `B9__project_eden_schema_baseline.sql` | Creates the canonical schema at V9 | Fresh, empty PostgreSQL only | Supported initialization baseline |
 
 No migration seeds application rows. Village template rows are created by the
 idempotent application bootstrap service after a character/world exists.
@@ -39,12 +54,11 @@ database, its foreign keys reference `photos` and `recognitions` before those
 tables exist. Reordering or editing V1/V2 would invalidate the checksums already
 recorded in deployed Flyway history.
 
-The selected `B9` strategy is Flyway's new-environment path:
-
-- empty schema: apply `B9` once, then apply future migrations above V9;
-- existing schema: the original `V1`–`V9` scripts and checksums must be present
-  before validating/upgrading it; this unit restores `V1`–`V7`, while the
-  dependent feature units still need to restore `V8` and `V9`.
+The selected `B9` strategy is Flyway's fresh-environment path: on an empty
+schema Flyway applies `B9` once, then applies future repository migrations
+above V9. This unit makes no promise to validate or upgrade an existing schema
+or migration history. Legacy database migration/import requires a separate,
+explicitly designed and validated policy.
 
 Rejected alternatives were modifying V2, fabricating a lower version below the
 recorded baseline, enabling Hibernate schema creation, and disabling Flyway.
@@ -78,9 +92,9 @@ baseline is portable SQL and does not redesign the rest of the test suite.
 7. Hibernate schema validation succeeds.
 
 The clean integration worktree uses only an ephemeral PostgreSQL Testcontainers
-database. It does not connect to or mutate a deployed database. Existing-database
-upgrade validation is outside this unit's verification; it depends on restoring
-the immutable V8/V9 scripts in their dependent feature units.
+database. It does not connect to or mutate a deployed database. Legacy-database
+upgrade validation is outside this unit's support contract and is not implied
+by the presence of historical `V1`–`V7` files in the repository.
 
 ## Safety boundary
 
