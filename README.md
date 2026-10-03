@@ -1003,3 +1003,53 @@ Authorization: Bearer {accessToken}
 ```
 
 Expression은 랜덤이나 외부 AI 없이 Theme별 규칙으로 항상 동일하게 생성됩니다. 실제 AI 분석, 사용자 심리 진단, NPC Memory, Memory Reflection 및 AI Story는 이 Sprint에 포함하지 않습니다.
+
+## NPC Memory / Living NPC API
+
+Living NPC는 사용자를 감시하거나 평가하지 않습니다. 주민은 사용자의 행동을 점수화하지 않고, 마을에 남은 기억과 분위기를 바탕으로 같은 세계를 조금씩 다르게 말합니다.
+
+NPC Memory는 Character와 NPC 조합별로 하나씩 저장됩니다.
+
+- `rememberedTheme`: 마지막 상호작용 시점의 Village Theme
+- `rememberedCategory`: 대사 선택에 사용된 기억 카테고리
+- `interactionCount`: 해당 NPC와 대화한 횟수
+- `lastDialogueKey`: 마지막으로 선택된 deterministic dialogue key
+- `lastInteractedAt`: 마지막 상호작용 시각
+
+`NpcContext`는 DB에 저장하지 않는 계산 결과입니다. 현재 `VillageThemeSnapshot`, 최근 24시간 이내 `VillageHistory`, 기존 `NpcMemory`를 조합해 NPC가 어떤 대사를 말할지 결정합니다.
+
+Dialogue Rule 우선순위:
+
+1. 첫 만남
+2. 최근 Theme 변경
+3. 최근 Village Change 등장
+4. 최근 Memory 기록
+5. 현재 Theme 기반 재방문
+6. UNDEFINED fallback
+
+반복 제어는 랜덤 없이 동작합니다. 같은 returning key가 연속으로 선택될 상황이면 `*_REPEAT_ALT`를 반환하고, ALT 다음에는 다시 기본 returning key로 돌아갑니다.
+
+### NPC 대사 조회
+
+```http
+GET /api/npcs/{npcId}/dialogue
+Authorization: Bearer {accessToken}
+```
+
+`characterId`는 요청으로 받지 않습니다. JWT 인증 사용자에서 Character를 조회하고, 요청한 `npcId`가 실제 NPC인지 확인한 뒤 대사를 반환합니다.
+
+```json
+{
+  "npcId": 1,
+  "dialogueKey": "FIRST_MEETING",
+  "message": "처음 보는 풍경인데도 이상하게 따뜻하네요.",
+  "currentTheme": "BLOOMING_VILLAGE",
+  "rememberedCategory": "NATURE",
+  "memoryChanged": true,
+  "spokenAt": "2026-07-10T15:00:00"
+}
+```
+
+응답에는 내부 상태인 `interactionCount`, `lastDialogueKey`, Village Memory count, 점수, percentage를 노출하지 않습니다. 호출이 성공하면 NPC Memory의 interaction count, remembered theme/category, last dialogue key, last interacted time이 갱신됩니다.
+
+Sprint 8의 Village Interpretation이 마을의 현재 분위기를 만들고, Sprint 9의 Living NPC는 그 분위기와 최근 마을 기록을 주민의 짧은 문장으로 표현합니다. 향후 NPC별 말투, Memory Reflection, AI Story로 확장할 예정이며, 현재는 외부 LLM을 호출하지 않는 규칙 기반 대사만 사용합니다.
