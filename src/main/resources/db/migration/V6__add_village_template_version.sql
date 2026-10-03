@@ -1,0 +1,1 @@
+ALTER TABLE worlds ADD COLUMN IF NOT EXISTS village_template_version INTEGER NOT NULL DEFAULT 0;
