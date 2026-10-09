@@ -13,6 +13,7 @@ import com.projecteden.character.repository.CharacterRepository;
 import com.projecteden.photo.domain.Photo;
 import com.projecteden.photo.dto.PhotoResponse;
 import com.projecteden.photo.dto.PhotoUploadResponse;
+import com.projecteden.photo.exception.PhotoUploadTooLargeException;
 import com.projecteden.photo.repository.PhotoRepository;
 import com.projecteden.plant.domain.Plant;
 import com.projecteden.plant.domain.PlantStage;
@@ -20,6 +21,8 @@ import com.projecteden.plant.repository.PlantRepository;
 
 @Service
 public class PhotoService {
+
+	private static final long MAX_PHOTO_SIZE_BYTES = 1024L * 1024L;
 
 	private final PhotoRepository photoRepository;
 	private final CharacterRepository characterRepository;
@@ -48,6 +51,9 @@ public class PhotoService {
 		}
 		if (file.isEmpty()) {
 			throw new IllegalArgumentException("업로드할 사진 파일이 필요합니다.");
+		}
+		if (file.getSize() > MAX_PHOTO_SIZE_BYTES) {
+			throw new PhotoUploadTooLargeException();
 		}
 		if (photoRepository.findByPlantId(plantId).isPresent()) {
 			throw new IllegalArgumentException("이미 사진이 등록된 식물입니다.");

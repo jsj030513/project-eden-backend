@@ -115,6 +115,32 @@ class PhotoIntegrationTests {
 	}
 
 	@Test
+	void photoOneByteBelowOneMiBCanBeUploaded() throws Exception {
+		bloom(plant);
+
+		performUpload(plant.getId(), accessToken, photoFile(1024 * 1024 - 1))
+				.andExpect(status().isCreated());
+	}
+
+	@Test
+	void photoExactlyOneMiBCanBeUploaded() throws Exception {
+		bloom(plant);
+
+		performUpload(plant.getId(), accessToken, photoFile(1024 * 1024))
+				.andExpect(status().isCreated());
+	}
+
+	@Test
+	void photoOneByteAboveOneMiBReturnsPayloadTooLargeWithoutVisionError() throws Exception {
+		bloom(plant);
+
+		performUpload(plant.getId(), accessToken, photoFile(1024 * 1024 + 1))
+				.andExpect(status().isPayloadTooLarge())
+				.andExpect(jsonPath("$.code").doesNotExist())
+				.andExpect(jsonPath("$.message").value("사진 파일은 1 MiB 이하여야 합니다."));
+	}
+
+	@Test
 	void nonBloomedPlantPhotoCannotBeUploaded() throws Exception {
 		performUpload(plant.getId(), accessToken)
 				.andExpect(status().isBadRequest())
@@ -171,14 +197,23 @@ class PhotoIntegrationTests {
 
 	private org.springframework.test.web.servlet.ResultActions performUpload(Long plantId, String token)
 			throws Exception {
+		return performUpload(plantId, token, photoFile());
+	}
+
+	private org.springframework.test.web.servlet.ResultActions performUpload(Long plantId, String token,
+			MockMultipartFile file) throws Exception {
 		return mockMvc.perform(multipart("/api/photos")
-				.file(photoFile())
+				.file(file)
 				.param("plantId", plantId.toString())
 				.header("Authorization", "Bearer " + token));
 	}
 
 	private MockMultipartFile photoFile() {
 		return new MockMultipartFile("file", "flower.jpg", "image/jpeg", "mock-image".getBytes());
+	}
+
+	private MockMultipartFile photoFile(int size) {
+		return new MockMultipartFile("file", "flower.jpg", "image/jpeg", new byte[size]);
 	}
 
 	private void bloom(Plant target) {
