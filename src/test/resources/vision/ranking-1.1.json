@@ -1,0 +1,23 @@
+{
+  "request_id": "synthetic-ranking-fixture",
+  "schema_version": "1.1",
+  "status": "ranked",
+  "image": {"width": 640, "height": 480},
+  "predictions": [],
+  "ranking": [
+    {"rank": 1, "concept_id": "cat", "display_name": "Cat", "broad_category": "animal", "hierarchy": ["living_thing", "animal", "cat"], "raw_score": 27.1, "score_kind": "raw_image_text_logit"},
+    {"rank": 2, "concept_id": "animal", "display_name": "Animal", "broad_category": "animal", "hierarchy": ["living_thing", "animal"], "raw_score": 25.2, "score_kind": "raw_image_text_logit"},
+    {"rank": 3, "concept_id": "dog", "display_name": "Dog", "broad_category": "animal", "hierarchy": ["living_thing", "animal", "dog"], "raw_score": 24.8, "score_kind": "raw_image_text_logit"},
+    {"rank": 4, "concept_id": "tree", "display_name": "Tree", "broad_category": "plant", "hierarchy": ["living_thing", "plant", "tree"], "raw_score": 1.2, "score_kind": "raw_image_text_logit"},
+    {"rank": 5, "concept_id": "plant", "display_name": "Plant", "broad_category": "plant", "hierarchy": ["living_thing", "plant"], "raw_score": -3.0, "score_kind": "raw_image_text_logit"}
+  ],
+  "unknown_decision": "not_applied",
+  "meta": {
+    "model_id": "synthetic-ranking-fixture",
+    "model_revision": "v1",
+    "taxonomy_version": "eden-v2",
+    "policy_version": "not_applied",
+    "calibration_version": null,
+    "coverage": "not_exhaustive"
+  }
+}

@@ -1,6 +1,11 @@
 spring:
   application:
     name: project-eden-backend
+  servlet:
+    multipart:
+      # Permit one byte above Vision's application limit so Vision can return its stable 413 payload.
+      max-file-size: 10485761B
+      max-request-size: 11MB
   jpa:
     open-in-view: false
 
@@ -10,6 +15,13 @@ server:
 jwt:
   secret: ${JWT_SECRET:project-eden-local-development-secret-key-2026-access-token}
   access-token-expiration: 3600000
+
+eden:
+  vision-api:
+    enabled: ${EDEN_VISION_API_ENABLED:false}
+    base-url: ${EDEN_VISION_API_BASE_URL:http://127.0.0.1:8090}
+    connect-timeout: ${EDEN_VISION_API_CONNECT_TIMEOUT:3s}
+    read-timeout: ${EDEN_VISION_API_READ_TIMEOUT:30s}
 
 ---
 spring:
