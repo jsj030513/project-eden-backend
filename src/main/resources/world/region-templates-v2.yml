@@ -1,0 +1,165 @@
+generationVersion: 3
+templates:
+  - templateKey: MEADOW_V3
+    regionType: MEADOW
+    width: 8
+    height: 8
+    terrainPattern:
+      - RRRRRRRR
+      - GGFREFGG
+      - GGGRGGGG
+      - RRRRRRRR
+      - GGFREGGG
+      - GGGREGFG
+      - GFGREGGG
+      - RRRRRRRR
+    requiredObjects: []
+    optionalDecorations:
+      - { type: MEADOW_FLOWERS, x: 2, y: 1 }
+      - { type: MEADOW_BUSH, x: 5, y: 4 }
+      - { type: MEADOW_STONE, x: 1, y: 6 }
+    connectors:
+      north: { type: ROAD, offset: 3 }
+      east: { type: ROAD, offset: 7 }
+      south: { type: ROAD, offset: 3 }
+      west: { type: ROAD, offset: 7 }
+    spawnZones:
+      - tag: OPEN_GRASS
+        x: 4
+        y: 4
+        width: 3
+        height: 3
+        allowedEcologyCategories: [ANIMAL, PLANT, MEMORY_OBJECT]
+        allowedAssetTypes: []
+        terrainRequirements: [GRASS, FLOWER_FIELD]
+        capacity: 4
+        minSpacing: 1
+        walkableRequired: true
+        interactionAccessRequired: true
+        movementAllowed: true
+        priority: 80
+      - tag: FLOWER_PATCH
+        x: 1
+        y: 4
+        width: 2
+        height: 3
+        allowedEcologyCategories: [ANIMAL, PLANT, MEMORY_OBJECT]
+        allowedAssetTypes: []
+        terrainRequirements: [GRASS, FLOWER_FIELD]
+        capacity: 2
+        minSpacing: 1
+        walkableRequired: true
+        interactionAccessRequired: true
+        movementAllowed: true
+        priority: 95
+    interactionZones: []
+
+  - templateKey: FOREST_V3
+    regionType: FOREST
+    width: 8
+    height: 8
+    terrainPattern:
+      - XXFRFXXX
+      - XFFRFFFX
+      - XFXRFXFX
+      - RRRRRRRR
+      - XFFRFFFX
+      - XFGRFGFX
+      - XFFRFFFX
+      - RRRRRRRR
+    requiredObjects: []
+    optionalDecorations:
+      - { type: FOREST_TREE, x: 0, y: 0 }
+      - { type: FOREST_TREE, x: 7, y: 0 }
+      - { type: FOREST_TREE, x: 1, y: 6 }
+      - { type: FOREST_TREE, x: 6, y: 6 }
+      - { type: FOREST_GRASS, x: 5, y: 5 }
+    connectors:
+      north: { type: ROAD, offset: 3 }
+      east: { type: ROAD, offset: 7 }
+      south: { type: ROAD, offset: 3 }
+      west: { type: ROAD, offset: 7 }
+    spawnZones:
+      - tag: CLEARING
+        x: 4
+        y: 4
+        width: 3
+        height: 3
+        allowedEcologyCategories: [ANIMAL, PLANT, MEMORY_OBJECT]
+        allowedAssetTypes: []
+        terrainRequirements: [FOREST, GRASS]
+        capacity: 3
+        minSpacing: 1
+        walkableRequired: true
+        interactionAccessRequired: true
+        movementAllowed: true
+        priority: 90
+      - tag: FOREST_ENTRANCE
+        x: 1
+        y: 4
+        width: 2
+        height: 3
+        allowedEcologyCategories: [ANIMAL, PLANT, MEMORY_OBJECT]
+        allowedAssetTypes: []
+        terrainRequirements: [FOREST, GRASS]
+        capacity: 2
+        minSpacing: 1
+        walkableRequired: true
+        interactionAccessRequired: true
+        movementAllowed: true
+        priority: 85
+    interactionZones: []
+
+  - templateKey: POND_V3
+    regionType: POND
+    width: 8
+    height: 8
+    terrainPattern:
+      - RRRRRRRR
+      - GWWBWWGG
+      - GWWBWWGG
+      - RBBBBBBR
+      - GWWBWWGG
+      - GWWBWWGG
+      - GWWBWWGG
+      - RRRRRRRR
+    requiredObjects: []
+    optionalDecorations:
+      - { type: POND_REED, x: 1, y: 1 }
+      - { type: POND_LOTUS, x: 5, y: 2 }
+      - { type: POND_STONE, x: 6, y: 6 }
+    connectors:
+      north: { type: ROAD, offset: 3 }
+      east: { type: ROAD, offset: 7 }
+      south: { type: ROAD, offset: 3 }
+      west: { type: ROAD, offset: 7 }
+    spawnZones:
+      - tag: SHORE
+        x: 6
+        y: 1
+        width: 2
+        height: 2
+        allowedEcologyCategories: [ANIMAL, PLANT, MEMORY_OBJECT]
+        allowedAssetTypes: []
+        terrainRequirements: [GRASS]
+        capacity: 2
+        minSpacing: 1
+        walkableRequired: true
+        interactionAccessRequired: true
+        movementAllowed: true
+        priority: 100
+      - tag: REED_EDGE
+        x: 6
+        y: 4
+        width: 2
+        height: 3
+        allowedEcologyCategories: [ANIMAL, PLANT, MEMORY_OBJECT]
+        allowedAssetTypes: []
+        terrainRequirements: [GRASS]
+        capacity: 2
+        minSpacing: 1
+        walkableRequired: true
+        interactionAccessRequired: true
+        movementAllowed: true
+        priority: 95
+    interactionZones: []
